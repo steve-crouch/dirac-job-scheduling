@@ -1,6 +1,6 @@
 ---
 title: "Job Submission and Management"
-slug: "dirac-scheduling-job-management"
+slug: "dirac-job-scheduling-job-management"
 teaching: 0
 exercises: 0
 questions:

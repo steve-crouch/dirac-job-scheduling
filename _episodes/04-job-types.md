@@ -1,6 +1,6 @@
 ---
 title: "Using Different Job Types"
-slug: "dirac-scheduling-job-types"
+slug: "dirac-job-scheduling-job-types"
 teaching: 0
 exercises: 0
 questions:
