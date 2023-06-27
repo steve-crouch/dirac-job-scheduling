@@ -1,6 +1,6 @@
 ---
 title: "Introduction to HPC Job Scheduling"
-slug: "dirac-scheduling-intro-job-scheduling"
+slug: "dirac-job-scheduling-intro-job-scheduling"
 teaching: 0
 exercises: 0
 questions:
