@@ -14,6 +14,22 @@ keypoints:
 - "First key point. Brief Answer to questions. (FIXME)"
 ---
 
+## Recap: Basics of Job Submission
+
+FIXME: very basic sbatch, script files (with account and partition) and squeue
+
+> ## A Reminder: Where's the Output?
+>
+> On the login node, this script printed output to the terminal -- but
+> now, when `squeue` shows the job has finished,
+> nothing was printed to the terminal.
+>
+> Cluster job output is typically redirected to a file in the directory you
+> launched it from. on DiRAC, for example, the output file looks like `slurm-<job_number>.out`,
+> with `<job_number>` representing the unique identifier for the job.
+> Use `ls` to find and `cat` to read the file.
+{: .callout}
+
 ## Selecting Resources for Jobs
 
 ### Determining Queues to which you have Access
@@ -53,19 +69,135 @@ It indicates how many nodes are:
 
 The `NODELIST` is a summary of those nodes in a particular queue.
 
-### Specifying Job Requirements
+### Specifying Job Resource Requirements
 
 FIXME: --ntasks, --nodes, --tasks-per-node, --cpus-per-task, --exclusive
 
+One thing that is absolutely critical when working on an HPC system
+is specifying the resources required to run a job, which allows the scheduler to
+find the right time and place to schedule our job. If you do not specify
+requirements (such as the amount of time you need), you will likely be stuck
+with your site's default resources, which is probably not what you want.
 
+When launching a job, we can specify the resources our job needs in our job script,
+using `#SBATCH <parameter>`. We've used this format before when indicating the account and queue to use.
+You may have seen some of these parameters before, but let's take a look at the most important
+ones and how they relate to each other.
 
+For these parameters, by default a *task* refers to a single CPU unless otherwise indicated.
+
+- `--nodes` - the total number of machines or nodes to request
+- `--ntasks` - the total number of CPU cores (across requested nodes) your job needs. Generally, this will be 1 unless you're running MPI jobs which are
+able to use multiple CPU cores. In which case, it essentially specifies the number of MPI ranks to start across the nodes. For example, if `--nodes=4` and `--ntasks=8`, we're requesting 4 nodes each with 2 CPUs
+- `--exclusive` - this indicates we'd like exclusive access to the nodes we request, such that they are shared with no other jobs, regardless of how many CPUs we actually need. If we are running jobs that require particularly large amounts of memory, CPUs, or disk access, this may be important.
+
+> ## Being Specific
+>
+> Write and submit a job script - perhaps adapted from our previous one - that requests a total of 3 nodes with 2 CPUs
+> per node.
+>
+> > ## Solution
+> >
+> > ```
+> > #!/bin/bash -l
+> > #SBATCH --account=ds007
+> > #SBATCH --partition=cosma7
+> > #SBATCH --nodes=3
+> > #SBATCH --ntasks=6
+> > #SBATCH --time=00:00:30
+> >
+> > echo "This script is running on ... "
+> > hostname
+> > ```
+> > {: .language-bash}
+> > 
+> > ```
+> > [yourUsername@login7a [cosma7] ~]$ sbatch multi-node-job.sh
+> > ...
+> > [yourUsername@login7a [cosma7] ~]$ squeue -U yourUsername
+> > ```
+> > {: .language-bash}
+> >
+> > ```
+> > JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+> > 6485195 cosma7-pa mul-job. dc-crou1  R       0:05      3 m[7400-7402]
+> > ```
+> > {: .output}
+> > 
+> > Here we can see that the job is using a total of three nodes as we'd like - `m7400`, `m7401` and `m7402`.
+>{: .solution}
+{: .challenge}
+
+We can also specify the number of CPUs to request per node explicitly using `--ntasks-per-node`. In this case, we
+use this with `--nodes` and we don't need to specify `--ntasks` at all. So using our above example with `--nodes=4`,
+to get our desired total 8 CPUs we'd specify `--ntasks-per-node=2`.
+
+> ## Being Even More Specific
+>
+> Write and submit a job script that uses `--nodes` and `--ntasks-per-node` to request a total of 3 nodes with 2 CPUs
+> per node.
+>
+> > ## Solution
+> >
+> > ```
+> > #!/bin/bash -l
+> > #SBATCH --account=ds007
+> > #SBATCH --partition=cosma7
+> > #SBATCH --nodes=3
+> > #SBATCH --ntasks-per-node=2
+> > #SBATCH --time=00:00:30
+> >
+> > echo "This script is running on ... "
+> > hostname
+> > ```
+> > {: .language-bash}
+> > 
+> > Once submitted, using `squeue` we should the same results as before, again using a total of three nodes.
+>{: .solution}
+{: .challenge}
+
+We'll be looking at how we can make full use of these parameters with MPI jobs later in this lesson.
+
+Up until now, the number of tasks have been synonymous with the number of CPUs. However, we can also specify a multiple
+number of CPUs per task too, by using `--cpus-per-task` - so if your job is multithreaded, for example it makes use of
+OpenMP, you can specify how many  threads it needs using this parameter.
+
+> ## What about Parameters Named -A, -N, -J and others?
+> 
+> You may also see some other shorter parameter names. In Slurm, some `SBATCH` options also have shortened forms, but
+> mean the same thing. For example:
+> 
+> |**Long form**       | **Short form**     |
+> |--------------------|--------------------|
+> |`--job-name`        | `-J`               |
+> |`--nodes`           | `-N`               |
+> |`--ntasks`          | `-n`               |
+> |`--cpus-per-task`   | `-c`               |
+> 
+> Not all parameters have a short form, for example `--nodes-per-task` and `--exclusive`.
+>
+> In practice you can use either, although using the longer form is more verbose and helps remove ambiguity,
+> particularly for newer users.
+{: .callout}
+
+> ## Only Request What you Need
+> 
+> When specifying resources your job will need it's important not to ask for too much.
+> Firstly, because any resources you request but don't use (e.g. CPUs, memory, GPUs) will be wasted
+> and potentially cost more in terms of your account usage, but also because requesting larger resources
+> will take longer to queue. It also means that other user's jobs that would would have been a better fit for these
+> resources may also take longer to run. It's good to remember that we are part of a wider community of HPC users, and
+> as with any shared resource, we should act responsibly when using it.
+> 
+> As we'll see later, using the `sacct` command we're able to find out what resources previous jobs actually used, and
+> then optimise the resources we request in future job runs.
+{: .callout}
 
 ## Managing Job Submissions
 
 ### Monitoring a Job
 
-While the job is waiting to run, it goes into a list of jobs called the _queue_.
-To check on our job's status, we check the queue using the command `squeue`:
+As we've seen, we can check on our job's status by using the command `squeue`. Let's take a look in more detail.
 
 ```
 [yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
@@ -78,7 +210,7 @@ You may find it looks like this:
   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 5791510 cosma7-pa example- yourUser PD       0:00      1 (Priority)
 ```
-{: .language-bash}
+{: .output}
 
 We can see all the details of our job, including the partition, user, and also the state of the job (in the `ST` column). In this case, we can see it is in the PD or PENDING state. Typically, a successful job run will go through the following states:
 
@@ -95,18 +227,6 @@ However, there are a number of reasons why jobs may end due to a failure or othe
 - `F` - *failed*: the job has terminated with a non-zero exit code or has failed for another reason
 
 You can get a full list of job status codes via the [SLURM documentation](https://slurm.schedmd.com/squeue.html#lbAG).
-
-> ## A Reminder: Where's the Output?
->
-> On the login node, this script printed output to the terminal -- but
-> now, when `squeue` shows the job has finished,
-> nothing was printed to the terminal.
->
-> Cluster job output is typically redirected to a file in the directory you
-> launched it from. on DiRAC, for example, the output file looks like `slurm-<job_number>.out`,
-> with `<job_number>` representing the unique identifier for the job.
-> Use `ls` to find and `cat` to read the file.
-{: .callout}
 
 ### Cancelling a Job
 
@@ -305,6 +425,7 @@ JobId=6484457 JobName=specific-job
 In particular, we can see:
 
 - As we might expect the `JobState` is `RUNNING`, although it may be `PENDING` if waiting to be assigned to a node, or if we weren't fast enough running the `scontrol` command it might be `COMPLETED`
+- How long the job has run for (`RunTime`), and the job's maximum specified duration (`TimeLimit`)
 - The job's `SubmitTime`, as well as the job's `StartTime` for execution: this may be the actual start time, or the expected start time if set in the future. The expected `EndTime` is also specified, although if it isn't specified directly in the job script this isn't always exactly `StartTime` + specified duration; it's often rounded up, perhaps to the nearest minute.
 - The queue assigned for the job is the `cosma7-pauper` queue, and that the job is running on the `m7401` node
 - The resources assigned to the job are a single node (`NumNodes=1`) with 28 CPU cores, for a single task with 1 CPU core per task. Pretty much as we would expect given what we requested in our job script, although note that we may get more resources than what we asked for. For example in this instance, we can see that we actually obtained a node with 28 CPUs (although we won't use them)
@@ -315,6 +436,27 @@ You can find more information on `scontrol` and the various fields in the [Slurm
 
 Note that typing `scontrol` on its own will enter an interactive state with an `scontrol` prompt which allows
 you to enter subcommands (like `show` or `update`) directly to the `scontrol` command. You can exit by typing `quit`.
+
+> ## Let's Wait a Bit...
+> 
+> It may be useful to defer the scheduling of a job until some point in the future.
+> We can specify a delayed start time (or even delayed start date) by using the `--begin` parameter in our job script.
+> For example, adding `#SBATCH --begin=16:00` will delay starting the job until 16:00 (assuming there is an appropriate
+> node available at that time). We can also specify a relative delay time, for example passing `now+1hour` instead.
+> 
+> Launch the job again, but this time specify a start time of 1 minute in the future in the job script. How does the
+> `scontrol` output change for a delayed job?
+> 
+> > ## Solution
+> >
+> > First add `#SBATCH --begin=now+1minute` to the parameters in the job script, and relaunch using `sbatch`.
+> >
+> > You should see in the job's `scontrol` output:
+> >
+> > - `JobState=PENDING`, `RunTime=00:00:00`, and `AccrueTime` is `Unknown`, since it's waiting to run and no runtime has yet elapsed
+> > - `EligibleTime` will specify the calculated start time one minute into the future
+>{: .solution}
+{: .challenge}
 
 ## Querying Job Resources
 
