@@ -299,6 +299,8 @@ required software dependencies as well,
 > Depending on your system and how it's configured, your mileage will differ!
 {: .callout}
 
+### How Loading Affects the Environment
+
 Note that this module loading process happens principally through
 the manipulation of environment variables like `$PATH`. There
 is usually little or no data transfer involved.
@@ -310,6 +312,31 @@ tell commercial software packages where to find license servers.
 
 The module command also restores these shell environment variables
 to their previous state when a module is unloaded.
+
+If we need such detail, we are able to see the changes that would be made to our environment using `module display`.
+For example:
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ module display julia/1.9.1
+~~~
+{:. language-bash}
+
+~~~
+-------------------------------------------------------------------
+/cosma/local/Modules/modulefiles/tools/julia/1.9.1:
+
+module-whatis   loads the julia environment
+prepend-path    PATH /cosma/local/julia/1.9.1
+prepend-path    MANPATH /cosma/local/julia/1.9.1/doc/man
+-------------------------------------------------------------------
+~~~
+{: .output}
+
+So here, we can see that loading version 1.9.1 of Julia will add `/cosma/local/julia/1.9.1` to the start of our path,
+which we previously verified by examining the `$PATH` environment variable.
+We can also see that it adds `/cosma/local/julia/1.9.1/doc/man` to a variable called `$MANPATH`,
+which is a specific path that contains locations of additional software manual pages we can access.
+Once Julia is loaded, we are thus able to then use `man julia` to access its manual page.
 
 > ## Loading Multiple Versions of the Same Module?
 > 
@@ -332,7 +359,6 @@ to their previous state when a module is unloaded.
 > To remedy this, see the next section for how to *unload* modules.
 {: .callout}
 
-
 ### Unloading Software
 
 Conversely, we may wish to unload modules we have previously loaded.
@@ -349,12 +375,19 @@ For example, assuming we already have Julia loaded, we can unload it using, e.g.
 Note we don't have to specify the version number.
 Once unloaded, our environment no longer allows us to make use of the software until we load it again.
 
+If we want to unload all modules in our environment, we can use the `module purge` command.
+But we aware that this will also remove any modules that are loaded automatically by default upon login.
+
 > ## Using Software Modules in Scripts
 >
+> We've so far explored how to load modules within an interactive command line session,
+> but if we want to make use of modules in our jobs we also need to load them in our job scripts
+> so they are loaded on compute nodes when the job runs.
+> 
 > Create a job that is able to run `julia --version`. Remember, no software
-> is loaded by default! Running a job is just like logging on to the system
-> (you should not assume a module loaded on the login node is loaded on a
-> compute node).
+> is loaded by default! Running a job is very similar to logging on to the system,
+> therefore you should not assume a module loaded on the login node is loaded on a
+> compute node.
 >
 > > ## Solution
 > >
