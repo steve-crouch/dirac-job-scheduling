@@ -11,19 +11,20 @@ objectives:
 - "Explain how the shell environment changes when the module mechanism loads or unloads packages."
 - "Use modules in a job script."
 keypoints:
-- "First key point. Brief Answer to questions. (FIXME)"
+- "HPC systems use a module loading/unloading system to provide access to software."
+- "To see the available modules on a system, we use `module avail`."
+- "`module list` will show us which modules we currently have loaded."
+- "We use `module load` and `module unload` to grant and remove access to modules on the system."
+- "We should only keep loaded those modules we actively wish to use, and try to avoid loading multiple versions of the same software."
 ---
 
 On a high-performance computing system, it is seldom the case that the software
-we want to use is available when we log in. It is installed, but we will need
-to "load" it before it can run.
+we want to use - things like compilers and libraries - is available when we log in.
+It is installed, but we will need to "load" it before it can run.
 
 Before we start using individual software packages, however, we should
-understand the reasoning behind this approach. The three biggest factors are:
-
-- software incompatibilities
-- versioning
-- dependencies
+understand the reasoning behind this approach. The three biggest factors are
+*software incompatibilities*, *versioning*, and *dependencies*.
 
 Software incompatibility is a major headache for programmers. Sometimes the
 presence (or absence) of a software package will break others that depend on
@@ -71,12 +72,12 @@ you are using.
 
 To see available software modules, use `module avail`:
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ module avail
-```
+~~~
 {: .language-bash}
 
-```
+~~~
 --------------------- /cosma/local/Modules/modulefiles/mpi ---------------------
 hpcx-mt/2.2             intel_mpi/2020            openmpi/4.0.3               
 intel_mpi/2017          intel_mpi/2020-update1    openmpi/4.0.5               
@@ -92,8 +93,34 @@ aocc/1.3.0                intel_comp/2019-update2
 aocc/2.0.0                intel_comp/2019-update3            
 aocc/2.2.0                intel_comp/2019-update4            
 ...
-```
+~~~
 {: .output}
+
+> ## What About Partial Matches?
+> 
+> A useful feature of `module avail` is that it also works on partial matches that begin with a given argument.
+> For example, `module avail x` would display a shortened list of any modules beginning with `x`.
+> This is handy if you need to search for a particular module but can't remember the full name,
+> or would like a succinct list of all versions of a particular module.
+> 
+> Using `module avail`, how many versions of `openmpi` are on your HPC system?
+> 
+> > ## Solution
+> >
+> > Typing `module avail openmpi` on DiRAC's COSMA HPC resource, at the time of writing we get:
+> > 
+> > ~~~
+> > --------------------- /cosma/local/Modules/modulefiles/mpi ---------------------
+> > openmpi/3.0.1(default)  openmpi/4.0.5         openmpi/4.1.4               
+> > openmpi/4.0.1           openmpi/4.1.1         openmpi/4.1.4-romio-lustre  
+> > openmpi/4.0.3           openmpi/4.1.1.no-ucx  openmpi/20190429   
+> > ~~~
+> > {: .output}
+> > 
+> > So, a total of 9 module versions of `openmpi`.
+>{: .solution}
+{: .challenge}
+
 
 ### Listing Currently Loaded Modules
 
@@ -101,43 +128,101 @@ You can use the `module list` command to see which modules you currently have
 loaded in your environment. If you have no modules loaded, you will see a
 message telling you so
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ module list
-```
+~~~
 {: .language-bash}
 
 Depending on your system, you may find something like the following:
 
-```
+~~~
 Currently Loaded Modulefiles:
  1) cosma/2018               3) armforge/22.0.2   5) gadgetviewer/1.1.3  
  2) python/2.7.15(default)   4) hdfview/3.1.4     6) utils/201805      
-```
+~~~
 {: .output}
 
 Or alternatively, you may find it returns with `No Modulefiles Currently Loaded.`
 
+> ## More or Less Information?
+> 
+> Using the `-l` switch with `module list` will give you more information about those modules loaded;
+> namely, any additional version information for each module loaded and the last date/time the module was
+> modified on the system.
+> Conversely, using the `-t` switch will give you the output in a terse format, as a simple list of modules
+> one per line.
+> 
+> These switches also work with `avail`.
+> Using the `-l` switch with this command,
+> determine the date a particular version of a module (such as openmpi or Python) was modified.
+> 
+> > ## Solution
+> > 
+> > Using `module avail -t openmpi/4.1.4` on DiRAC at time of writing, we get:
+> >
+> > ~~~
+> >  openmpi/4.1.4                                               2022/11/28 11:11:31
+> > ~~~
+> > {: .output}
+>{: .solution}
+{: .challenge}
+
 ## Loading and Unloading Software
 
-To load a software module, use `module load`. In this example we will use
-Python 3.
+To gain or remove access to the typically numerous software modules we have available to us on an HPC system,
+we *load* or *unload* them.
 
-Initially, Python 3 is not loaded. We can test this by using the `which`
-command. `which` looks for programs the same way that Bash does, so we can use
+### Loading Software
+
+To load a software module, we use `module load`.
+In this example we will use Julia, which a high-level language designed for parallelism commonly used for numerical
+analysis and computational science.
+We won't use or investigate the language in any detail, but merely use it to demonstrate the use of modules.
+
+Initially, Julia is not loaded. We can test this by using the `which`
+command.
+`which` looks for programs the same way that Bash does, so we can use
 it to tell us where a particular piece of software is stored.
 
-```
-[yourUsername@login7a [cosma7] ~]$ which python3
-```
+~~~
+[yourUsername@login7a [cosma7] ~]$ which julia
+~~~
 {: .language-bash}
 
-FIXME: /modules/missing-python.snip
+You'll likely get something like the following, complaining that it can't find the `julia` command within our
+environment:
 
-We can load the `python3` command with `module load`:
+~~~
+/usr/bin/which: no julia in (/cosma/local/matlab/R2020b/bin:/cosma/local/gadgetviewer/1.1.4/bin:/cosma/local/hdfview/HDFView/3.1.4/bin:/cosma/local/arm/forge/22.0.2/bin:/cosma/local/Python/2.7.15/bin:/cosma/local/bin:/usr/lib64/qt-3.3/bin:/cosma/local/Modules/default/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin)
+~~~
+{: .output}
 
-FIXME: /modules/module-load-python.snip
+So we can now try to load the Julia module with `module load`:
 
-FIXME: /modules/python-executable-dir.snip
+~~~
+[yourUsername@login7a [cosma7] ~]$ module load julia
+[yourUsername@login7a [cosma7] ~]$ which julia
+~~~
+{: .language-bash}
+
+> ## Why Not Specify the Version of Julia?
+> 
+> Note here we aren't specifying the precise version of Julia that we want for simplicity here,
+> particularly since differing HPC systems aren't guaranteed to support a particular example version.
+> However, feel free to use `module avail julia` to determine the versions available on your HPC system
+> and then load a specific version if you wish, e.g. `module load julia/1.9.1`
+> 
+> At some point or other, you will run into issues where only one particular version of some software will be suitable.
+> Perhaps a key bugfix only happened in a certain version, or version X broke compatibility with a file format you use.
+> In either of these example cases, it helps to be very specific about what software is loaded.
+{: .callout}
+
+You'll likely get something like the following, depending on where Julia is installed:
+
+~~~
+/cosma/local/julia/1.9.1/julia
+~~~
+{: .output}
 
 So, what just happened?
 
@@ -148,28 +233,71 @@ directories (separated by `:`) that the OS searches through for a command
 before giving up and telling us it can't find it. As with all environment
 variables we can print it out using `echo`.
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ echo $PATH
-```
+~~~
 {: .language-bash}
 
-FIXME: /modules/python-module-path.snip
+~~~
+/cosma/local/julia/1.9.1:/cosma/local/matlab/R2020b/bin:/cosma/local/gadgetviewer/1.1.4/bin:/cosma/local/hdfview/HDFView/3.1.4/bin:/cosma/local/arm/forge/22.0.2/bin:/cosma/local/Python/2.7.15/bin:/cosma/local/bin:/usr/lib64/qt-3.3/bin:/cosma/local/Modules/default/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+~~~
+{: .output}
 
 You'll notice a similarity to the output of the `which` command. In this case,
-there's only one difference: the different directory at the beginning. When we
+there's only one difference: the different directory at the beginning.When we
 ran the `module load` command, it added a directory to the beginning of our
-`$PATH`. Let's examine what's there:
+`$PATH`. Let's examine what's there (your particular path may differ):
 
-FIXME: /modules/python-ls-dir-command.snip
+~~~
+[yourUsername@login7a [cosma7] ~]$ ls /cosma/local/julia/1.9.1
+~~~
+{: .language-bash}
 
-FIXME: /modules/python-ls-dir-output.snip
+~~~
+base          contrib          etc              LICENSE.md  README.md    test           VERSION
+CITATION.bib  CONTRIBUTING.md  HISTORY.md       Makefile    src          THIRDPARTY.md
+CITATION.cff  deps             julia            Make.inc    stdlib       usr
+cli           doc              julia.spdx.json  NEWS.md     sysimage.mk  usr-staging
+~~~
+{: .output}
 
-Taking this to its conclusion, `module load` will add software to your `$PATH`.
-It "loads" software. A special note on this - depending on which version of the
-`module` program that is installed at your site, `module load` will also load
-required software dependencies.
+Taking this to its conclusion, `module load` will add software to your `$PATH`,
+which is what is meant by *loading* software: we are essentially changing our command line environment
+so we are able to make use of the software.
 
-FIXME: /modules/software-dependencies.snip
+> ## What About Loading Dependencies?
+> 
+> A special note on this - depending on which version of the
+`module` program that is installed at your site, `module load` may also load
+required software dependencies as well,
+> or make specific mention that other modules need to be loaded beforehand.
+>
+> To demonstrate, on DiRAC's COSMA resource, let's assume we want to load a particular version of OpenMPI:
+> 
+> ~~~
+> [yourUsername@login7a [cosma7] ~]$ module load openmpi/4.1.4
+> ~~~
+> {: .language-bash}
+> 
+> In this case, at the time of writing we get the following:
+> 
+> ~~~
+> A compiler must be chosen before loading the openmpi module.
+>  Please load one of the following compiler modules:
+>  
+>          aocc_comp/4.0.0
+>          gnu_comp/11.1.0
+>          gnu_comp/13.1.0
+>          gnu_comp/9.3.0
+>          intel_comp/2022.1.2
+>          intel_comp/2022.3.0
+> ~~~
+> {: .output}
+> 
+> So here, we need to explicitly load one of these compiler options before we are able to load OpenMPI.
+> e.g. `module load gnu_comp/13.1.0`.
+> Depending on your system and how it's configured, your mileage will differ!
+{: .callout}
 
 Note that this module loading process happens principally through
 the manipulation of environment variables like `$PATH`. There
@@ -183,54 +311,72 @@ tell commercial software packages where to find license servers.
 The module command also restores these shell environment variables
 to their previous state when a module is unloaded.
 
-## Software Versioning
+> ## Loading Multiple Versions of the Same Module?
+> 
+> You may ask so what if we load multiple versions of the same module?
+> For example, if you want to 
+> Depending on how your system is configured this may be possible, e.g.
+> 
+> ~~~
+> [yourUsername@login7a [cosma7] ~]$ module load julia/1.9.1
+> [yourUsername@login7a [cosma7] ~]$ module load julia/1.5.3
+> ~~~
+> {: .language-bash}
+> 
+> In some cases, you may encounter incompatibility dependency conflicts,
+> particularly with underlying libraries.
+> However you may not see any error at all, which could give rise to confusion.
+> One way around this would be to exit your current terminal session and reconnect to the HPC resource which will reset
+> your environment.
+> But what about within the same login session?
+> To remedy this, see the next section for how to *unload* modules.
+{: .callout}
 
-So far, we've learned how to load and unload software packages. This is very
-useful. However, we have not yet addressed the issue of software versioning. At
-some point or other, you will run into issues where only one particular version
-of some software will be suitable. Perhaps a key bugfix only happened in a
-certain version, or version X broke compatibility with a file format you use.
-In either of these example cases, it helps to be very specific about what
-software is loaded.
 
-Let's examine the output of `module avail` more closely.
+### Unloading Software
 
-```
-[yourUsername@login7a [cosma7] ~]$ module avail
-```
+Conversely, we may wish to unload modules we have previously loaded.
+This is useful if we no longer need to use a module, or require another version of the module.
+In general, it's always good practice to unload modules you aren't currently using.
+
+For example, assuming we already have Julia loaded, we can unload it using, e.g.:
+
+~~~
+[yourUsername@login7a [cosma7] module unload julia
+~~~
 {: .language-bash}
 
-FIXME: /modules/available-modules.snip
-
-FIXME: /modules/wrong-gcc-version.snip
+Note we don't have to specify the version number.
+Once unloaded, our environment no longer allows us to make use of the software until we load it again.
 
 > ## Using Software Modules in Scripts
 >
-> Create a job that is able to run `python3 --version`. Remember, no software
+> Create a job that is able to run `julia --version`. Remember, no software
 > is loaded by default! Running a job is just like logging on to the system
 > (you should not assume a module loaded on the login node is loaded on a
 > compute node).
 >
 > > ## Solution
 > >
-> > ```
-> > [yourUsername@login7a [cosma7] ~]$ nano python-module.sh
-> > [yourUsername@login7a [cosma7] ~]$ cat python-module.sh
-> > ```
+> > In `julia-module.sh` (again, replacing `yourAccount` and `aPartition`):
+> >
+> > ~~~
+> > #!/bin/bash -l
+> > #SBATCH --account=yourAccount
+> > #SBATCH --partition=aPartition
+> > #SBATCH --nodes=1
+> > #SBATCH --ntasks-per-node=1
+> > #SBATCH --time=00:00:30
+> > 
+> > module load julia
+> >
+> > julia --version
+> > ~~~
 > > {: .language-bash}
 > >
-> > ```
-> > {{ site.remote.bash_shebang }}
-> >
-> > module load python/3.10.1
-> >
-> > python3 --version
-> > ```
-> > {: .output}
-> >
-> > ```
-> > [yourUsername@login7a [cosma7] ~]$ sbatch python-module.sh
-> > ```
+> > ~~~
+> > [yourUsername@login7a [cosma7] ~]$ sbatch julia-module.sh
+> > ~~~
 > > {: .language-bash}
 > {: .solution}
 {: .challenge}
