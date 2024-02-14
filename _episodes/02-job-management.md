@@ -14,20 +14,15 @@ keypoints:
 - "First key point. Brief Answer to questions. (FIXME)"
 ---
 
-## Recap: Basics of Job Submission
-
-FIXME: very basic sbatch, script files (with account and partition) and squeue
-
-> ## A Reminder: Where's the Output?
+> ## Recap: Basics of Job Submission
+> 
+> FIXME: very basic sbatch, script files (with account and partition) and squeue
 >
-> On the login node, this script printed output to the terminal -- but
-> now, when `squeue` shows the job has finished,
-> nothing was printed to the terminal.
->
-> Cluster job output is typically redirected to a file in the directory you
-> launched it from. on DiRAC, for example, the output file looks like `slurm-<job_number>.out`,
+> ### A Reminder: Where's the Output?
+> 
+> By default Slurm job output is found in your home directory, and the output file looks like `slurm-<job_number>.out`,
 > with `<job_number>` representing the unique identifier for the job.
-> Use `ls` to find and `cat` to read the file.
+> Use `ls` to find the file and `cat` with the output file name to read the file.
 {: .callout}
 
 ## Selecting Resources for Jobs
@@ -37,13 +32,14 @@ FIXME: very basic sbatch, script files (with account and partition) and squeue
 Before we submit a job, we need to specify a queue to which it will be submitted.
 You can find out the queues you have access rights for, and their state, using:
 
-```bash
+~~~
 [yourUsername@login7a [cosma7] ~]$ sinfo -s
-```
+~~~
+{: .language-bash}
 
 You should see something like the following, although this will vary for each DiRAC resource:
 
-```
+~~~
 PARTITION         AVAIL  TIMELIMIT   NODES(A/I/O/T) NODELIST
 cosma7               up 3-00:00:00     80/137/7/224 m[7229-7452]
 cosma7-pauper        up 1-00:00:00     80/137/7/224 m[7229-7452]
@@ -52,7 +48,8 @@ cosma7-shm-pauper    up 1-00:00:00          0/1/0/1 mad02
 cosma7-bench         up 1-00:00:00          0/0/1/1 m7452
 cosma7-rp            up 3-00:00:00     82/140/2/224 m[7001-7224]
 cosma7-rp-pauper*    up 1-00:00:00     82/140/2/224 m[7001-7224]
-```
+~~~
+{: .output}
 
 Here we can see the general availability of each of these queues (also known as partitions), as well as the maximum
 time limit for jobs on each of these queues (in `days-hours:minutes:seconds` format).
@@ -89,7 +86,6 @@ For these parameters, by default a *task* refers to a single CPU unless otherwis
 - `--nodes` - the total number of machines or nodes to request
 - `--ntasks` - the total number of CPU cores (across requested nodes) your job needs. Generally, this will be 1 unless you're running MPI jobs which are
 able to use multiple CPU cores. In which case, it essentially specifies the number of MPI ranks to start across the nodes. For example, if `--nodes=4` and `--ntasks=8`, we're requesting 4 nodes each with 2 CPUs
-- `--exclusive` - this indicates we'd like exclusive access to the nodes we request, such that they are shared with no other jobs, regardless of how many CPUs we actually need. If we are running jobs that require particularly large amounts of memory, CPUs, or disk access, this may be important.
 
 > ## Being Specific
 >
@@ -98,30 +94,30 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 >
 > > ## Solution
 > >
-> > ```
+> > ~~~
 > > #!/bin/bash -l
-> > #SBATCH --account=ds007
-> > #SBATCH --partition=cosma7
+> > #SBATCH --account=yourAccount
+> > #SBATCH --partition=aPartition
 > > #SBATCH --nodes=3
 > > #SBATCH --ntasks=6
 > > #SBATCH --time=00:00:30
 > >
 > > echo "This script is running on ... "
 > > hostname
-> > ```
+> > ~~~
 > > {: .language-bash}
 > > 
-> > ```
+> > ~~~
 > > [yourUsername@login7a [cosma7] ~]$ sbatch multi-node-job.sh
 > > ...
 > > [yourUsername@login7a [cosma7] ~]$ squeue -U yourUsername
-> > ```
+> > ~~~
 > > {: .language-bash}
 > >
-> > ```
+> > ~~~
 > > JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 > > 6485195 cosma7-pa mul-job. dc-crou1  R       0:05      3 m[7400-7402]
-> > ```
+> > ~~~
 > > {: .output}
 > > 
 > > Here we can see that the job is using a total of three nodes as we'd like - `m7400`, `m7401` and `m7402`.
@@ -139,17 +135,17 @@ to get our desired total 8 CPUs we'd specify `--ntasks-per-node=2`.
 >
 > > ## Solution
 > >
-> > ```
+> > ~~~
 > > #!/bin/bash -l
-> > #SBATCH --account=ds007
-> > #SBATCH --partition=cosma7
+> > #SBATCH --account=yourAccount
+> > #SBATCH --partition=aPartition
 > > #SBATCH --nodes=3
 > > #SBATCH --ntasks-per-node=2
 > > #SBATCH --time=00:00:30
 > >
 > > echo "This script is running on ... "
 > > hostname
-> > ```
+> > ~~~
 > > {: .language-bash}
 > > 
 > > Once submitted, using `squeue` we should the same results as before, again using a total of three nodes.
@@ -160,7 +156,7 @@ We'll be looking at how we can make full use of these parameters with MPI jobs l
 
 Up until now, the number of tasks have been synonymous with the number of CPUs. However, we can also specify a multiple
 number of CPUs per task too, by using `--cpus-per-task` - so if your job is multithreaded, for example it makes use of
-OpenMP, you can specify how many  threads it needs using this parameter.
+OpenMP, you can specify how many threads it needs using this parameter.
 
 > ## What about Parameters Named -A, -N, -J and others?
 > 
@@ -180,7 +176,7 @@ OpenMP, you can specify how many  threads it needs using this parameter.
 > particularly for newer users.
 {: .callout}
 
-> ## Only Request What you Need
+> ## Only Request What you Require
 > 
 > When specifying resources your job will need it's important not to ask for too much.
 > Firstly, because any resources you request but don't use (e.g. CPUs, memory, GPUs) will be wasted
@@ -199,25 +195,31 @@ OpenMP, you can specify how many  threads it needs using this parameter.
 
 As we've seen, we can check on our job's status by using the command `squeue`. Let's take a look in more detail.
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
-```
+~~~
 {: .language-bash}
 
 You may find it looks like this:
 
-```
+~~~
   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 5791510 cosma7-pa example- yourUser PD       0:00      1 (Priority)
-```
+~~~
 {: .output}
 
-We can see all the details of our job, including the partition, user, and also the state of the job (in the `ST` column). In this case, we can see it is in the PD or PENDING state. Typically, a successful job run will go through the following states:
+We can see all the details of our job, including the partition, user, and also the state of the job (in the `ST` column). In this case, we can see it is in the PD or PENDING state.
+Typically, a successful job run will go through the following states:
 
-- `PD` - *pending*: sometimes our jobs might need to wait in a queue first before they can be allocated to a node to run
+- `PD` - *pending*: sometimes our jobs might need to wait in a queue first before they can be allocated to a node to run. 
 - `R` - *running*: job has an allocation and is currently running
 - `CG` - *completing*: job is in the process of completing
 - `CD` - *completed*: the job is completed
+
+For pending jobs, helpfully, you may see a reason for this in the `NODELIST(REASON)` column;
+for example, that the nodes required for the job are down or reserved for other jobs,
+or that the job is queued behind a higher priority job that is making use of the requested resources.
+Once it's able to run, the nodes that have been allocated will be displayed in this column instead.
 
 However, there are a number of reasons why jobs may end due to a failure or other condition, including:
 
@@ -235,34 +237,34 @@ the `scancel` command. Let's submit a job and then cancel it using
 its job number (remember to change the walltime so that it runs long enough for
 you to cancel it before it is killed!).
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
 [yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
-```
+~~~
 {: .language-bash}
 
-```
+~~~
 Submitted batch job 5791551
 
   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 5791551 cosma7-pa hello-wo yourUser PD       0:00      1 (Priority)
-```
+~~~
 {: .output}
 
 Now cancel the job with its job number (printed in your terminal). A clean
 return of your command prompt indicates that the request to cancel the job was
 successful.
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ scancel 5791551
 # It might take a minute for the job to disappear from the queue...
 [yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
-```
+~~~
 {: .language-bash}
 
-```
+~~~
 ...(no output when there are no jobs to display)...
-```
+~~~
 {: .output}
 
 > ## Cancelling multiple jobs
@@ -275,18 +277,18 @@ successful.
 > >
 > > First, submit a trio of jobs:
 > >
-> > ```
+> > ~~~
 > > [yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
 > > [yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
 > > [yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
-> > ```
+> > ~~~
 > > {: .language-bash}
 > >
 > > Then, cancel them all:
 > >
-> > ```
+> > ~~~
 > > [yourUsername@login7a [cosma7] ~]$ scancel -u yourUsername
-> > ```
+> > ~~~
 > > {: .language-bash}
 >{: .solution}
 {: .challenge}
@@ -298,22 +300,23 @@ When that is true and the queues are busy backfilling can be really useful.
 
 If there are idle nodes then that means they are available to run jobs, or that they are being kept so that a
 job can run in the future. The time between when a job needs those nodes and now is the backfill window
-and jobs that need less than that time will be scheduled to run.
+and jobs that need less than that time will be scheduled to run. To take best advantage of backfilling, 
+specify a shorter time period for jobs.
 
 You can check if a particular Slurm scheduler is configured to use a backfill technique by doing the following:
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ scontrol show config | grep SchedulerType
-```
+~~~
 {: .language-bash}
 
 This use of the `scontrol` command allows us to see the configuration of Slurm, and by piping its output (using `|`) to
-the `grep`command, we can search for a particular configuration field called `SchedulerType` which holds the method used
+the `grep` command, we can search for a particular configuration field called `SchedulerType` which holds the method used
 for scheduling. If a backfill scheduler is being used, you should see the following:
 
-```
+~~~
 SchedulerType           = sched/backfill
-```
+~~~
 {: .output}
 
 If the `builtin` scheduler is used instead, then jobs will be executed in order of submission, regardless if there
@@ -324,12 +327,12 @@ are any free resources to run your job immediately.
 > On DiRAC's COSMA you are able to see backfill availability windows for various queues
 > (e.g. for COSMA5, COSMA7,and COSMA8) by using a particular backfill command. For example, for COSMA5:
 > 
-> ```
+> ~~~
 > [yourUsername@login7a [cosma7] ~]$ c5backfill
-> ```
+> ~~~
 > {: .language-bash}
 > 
-> ```
+> ~~~
 > # Backfill windows available for cosma queues:
 > #
 > No. hosts/slots:  1 / 16
@@ -339,7 +342,7 @@ are any free resources to run your job immediately.
 > No. hosts/slots:  5 / 80
 > Runtime:          72 hours 00 minutes 00 seconds
 > Hostnames:        m[5185,5315,5337,5366,5377]
-> ```
+> ~~~
 > {: .output}
 >
 > So here, we can see that on COSMA5 we have only one node available for 31 hours and 49 minutes, and 5 nodes available
@@ -353,10 +356,10 @@ even more information using the `scontrol` command regarding the job's status, c
 
 Let's create a new job to test this, that uses a single node and a single CPU on that node to run a single basic task:
 
-```
+~~~
 #!/usr/bin/env bash
-#SBATCH --account=ds007
-#SBATCH --partition=cosma7
+#SBATCH --account=yourAccount
+#SBATCH --partition=aPartition
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
@@ -367,32 +370,32 @@ Let's create a new job to test this, that uses a single node and a single CPU on
 sleep 25
 echo "This script is running on ... "
 hostname
-```
+~~~
 {: .language-bash}
 
 Next, launch our new job:
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ sbatch specific-job.sh
-```
+~~~
 {: .language-bash}
 
 ...then make a note of the job ID returned, e.g.:
 
-```
+~~~
 ...
 Submitted batch job 6484453
-```
+~~~
 {: .output}
 
 We can then use this job ID to ask Slurm for more information about it:
 
-```
+~~~
 [yourUsername@login7a [cosma7] ~]$ scontrol show jobid=6484453
-```
+~~~
 {: .language-bash}
 
-```
+~~~
 JobId=6484457 JobName=specific-job
    UserId=dc-crou1(21859) GroupId=ds007(20133) MCS_label=N/A
    Priority=100001 Nice=0 Account=ds007 QOS=normal
@@ -413,13 +416,13 @@ JobId=6484457 JobName=specific-job
    MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0
    Features=(null) DelayBoot=00:00:00
    OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
-   Command=/cosma/home/ds007/dc-crou1/example-job.sh
-   WorkDir=/cosma/home/ds007/dc-crou1
-   StdErr=/cosma/home/ds007/dc-crou1/slurm-6484457.out
+   Command=/cosma/home/ds007/userHome/example-job.sh
+   WorkDir=/cosma/home/ds007/userHome
+   StdErr=/cosma/home/ds007/userHome/slurm-6484457.out
    StdIn=/dev/null
-   StdOut=/cosma/home/ds007/dc-crou1/slurm-6484457.out
+   StdOut=/cosma/home/ds007/userHome/slurm-6484457.out
    Power=
-```
+~~~
 {: .output}
 
 In particular, we can see:
@@ -460,5 +463,11 @@ you to enter subcommands (like `show` or `update`) directly to the `scontrol` co
 
 ## Querying Job Resources
 
-FIXME: sstat - which resources is a job using?
-FIXME: sacct - same, but for completed jobs
+FIXME: use a larger code example they get from github with sstat and sacct. Code needs a fairish amount of memory, CPUS.
+
+FIXME: sstat - which resources is a job currently using? e.g. sstat --format=AveCPU,AveCPUFreq,NTasks,MinCPU,MinCPUTask,MaxDiskWrite,MaxVMSizeNode -j 6485359.batch
+FIXME: in callout, also show cosma's c{5,7,8}jobload - more convenient
+
+FIXME: sacct - same, but for completed jobs. e.g. sacct --jobs 6485202 --format JobID,AllocCPUS,Elapsed,CPUTime - explain cputime = elapsed * alloccpus
+
+FIXME: end exercise - again using the example code on github. Submit first using a large amount of resources, then using sacct refine the requests until they are representative of what the job actually needs
