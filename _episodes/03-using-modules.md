@@ -368,7 +368,7 @@ In general, it's always good practice to unload modules you aren't currently usi
 For example, assuming we already have Julia loaded, we can unload it using, e.g.:
 
 ~~~
-[yourUsername@login7a [cosma7] module unload julia
+[yourUsername@login7a [cosma7] ~]$ module unload julia
 ~~~
 {: .language-bash}
 
