@@ -11,9 +11,24 @@ questions:
 - "How can I submit the same job many times with different inputs?"
 - "How can I interactively debug a running job?"
 objectives:
-- "First learning objective. (FIXME)"
+- "Use a popular compiler to compile a C program before testing and submitting it."
+- "Use a compute node for a job exclusively."
+- "Describe how an OpenMP job parallelises its computation."
+- "Compile and submit an OpenMP job."
+- "Describe how an MPI job parallelises its computation."
+- "Compile and submit an MPI job."
+- "Highlight the key differences between OpenMP and MPI jobs."
+- "Define and submit an array job to execute multiple tasks within a single job."
+- "Use an interactive job to run commands remotely on a compute node."
 keypoints:
-- "First key point. Brief Answer to questions. (FIXME)"
+- "The login node is shared with all other users so be careful not to run complex programs on them."
+- "OpenMP allows programmers to specify sections of code to execute in parallel threads on a single CPU, using compiler directives."
+- "MPI programs make use of message-passing between multiple processes to coordinate communication."
+- "OpenMP uses a *shared memory* model, whilst MPI uses a *distributed memory* model."
+- "An array job is a self-contained set of multiple jobs - known as *tasks* - managed as a single job."
+- "Interactive jobs allow us to interact directly with a compute node, so are very useful for debugging and exploring the running of code in real-time."
+- "Interactive jobs consume resources while an interactive session is active, so we must be careful to use them efficiently."
+- "Run and develop applications at a small scale first, before making use of powerful scaling techniques, to avoid potentially expensive consumption of resources."
 ---
 
 So far we've learned about the overall process and the necessary "scaffolding" around job submission;
@@ -76,7 +91,6 @@ Now, given this is a very simple serial job, we might write the following `hw_se
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mem=1M
-#SBATCH --chdir=/cosma/home/ds007/dc-crou1/job-scheduler-test
 
 ./hello_world_serial
 ~~~
@@ -101,7 +115,7 @@ and then look at the `slurm-<job_number>.out` file to see the `Hello world!` out
 ## Multi-threaded via OpenMP
 
 OpenMP allows programmers to identify and parallelize sections of code, enabling multiple threads to execute them concurrently.
-This concurrency is achieved using a *shared-memory* model,
+This concurrency is achieved using a *shared memory* model,
 where all threads can access a common memory space and communicate through shared variables.
 
 So with OpenMP, think of your program as a team with a leader (the master thread) and workers (the slave threads).
@@ -166,6 +180,8 @@ within the master thread, and outputs the results array containing all the worke
 Now before we compile and test it, we need to indicate how many threads we wish to run,
 which is specified in the environment in a special variable and picked up by the program, so we'll do that first:
 
+FIXME: use a submission script instead
+
 ~~~
 [yourUsername@login7a [cosma7] ~]$ export OMP_NUM_THREADS=3
 [yourUsername@login7a [cosma7] ~]$ gcc hello_world_mp.c -o hello_world_mp
@@ -189,9 +205,9 @@ Let's take this parallelisation one step further to the level of a process,
 where we run separate *processes* in parallel as opposed to threads.
 
 At this level, things become more complicated!
-Within a single thread we had the option to maintain access to variables across our threads,
+With OpenMP we had the option to maintain access to variables across our threads,
 but between processes, memory isn't shared, so if we want to share information between these processes we need another way to do it.
-With MPI, this is done via sending and receiving messages between processes.
+MPI uses a *distributed memory* model, so communication is done via sending and receiving messages between processes.
 
 Now despite this inter-process communication being a greater overhead,
 in general our master/worker model still holds.
@@ -251,8 +267,7 @@ Finally, if the rank is the coordinating rank, then the results are output.
 The `if (my_rank == 0)` condition is important, since without it, all ranks would attempt to print the results,
 since with MPI, typically all processes run the entire program.
 
-Let's compile and run this now, ensuring we have the needed modules to compile MPI first.
-On DiRAC's COSMA, this looks like:
+Let's compile this now. On DiRAC's COSMA, this looks like:
 
 ~~~
 [yourUsername@login7a [cosma7] ~]$ module load gnu_comp/13.1.0
@@ -261,17 +276,48 @@ On DiRAC's COSMA, this looks like:
 {: .language-bash}
 
 So note we need to use a specialised compiler, `mpicc`, to compile this MPI code.
-Now we're able to run it, specifying how many separate processes we wish to run in parallel.
-With MPI programs we typically run them using `mpiexec`,
-and instead of specifying these in an environment variable,
-we indicate this using the `-n` argument, e.g.:
+
+Now we're able to run it, and specify how many separate processes we wish to run in parallel.
+However, since this is a multi-processing job we should submit it via Slurm.
+Let's create a new submission script named `hw_mpi.sh` that executes this MPI job:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ mpiexec -n 3 ./hello_world_mpi
-~~~
-{: .language-bash}
+#!/usr/bin/env bash
+#SBATCH --account=yourAccount
+#SBATCH --partition=aPartition
+#SBATCH --job-name=hello_world_mpi
+#SBATCH --time=00:01:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=3
+#SBATCH --mem=1M
 
-You should see:
+module load gnu_comp/11.1.0
+module load openmpi/4.1.4
+
+mpiexec ./hello_world_mpi
+~~~
+{: .language-c}
+
+On this particular HPC setup on DiRAC's COSMA, we need to load both a suitable compiler as well as the OpenMPI module
+so we can run MPI jobs; your system may differ!
+
+Note also that we specify `3` to `--ntasks` this time to reflect the number of processes we wish to run.
+
+You'll also see that with MPI programs we use `mpiexec` to run them,
+and instead of specifying the number of parallel processes in an environment variable,
+`mpiexec` will use the number of processes available to the job; in this case 3.
+
+> ## Efficient use of Resources
+> 
+> Beware using `--ntasks` correctly when submitting non-MPI jobs.
+> Setting this to a number greater than 1 will have the effect of running the job that many times,
+> regardless of whether it's using MPI or not,
+> so 
+> It also has the effect of multiple jobs overwriting, as opposed to appending to, the jobs' output log file,
+> so the fact this has happened may not be obvious.
+{: .callout}
+
+In the Slurm output file You should see:
 
 ~~~
 Hello world rank number received from rank 0
@@ -284,9 +330,157 @@ Hello world rank number received from rank 2
 
 So we've seen how parallelisation can be achieved using threads and processes,
 but using a sophisticated job scheduler like Slurm, we are able to go a level higher using *job arrays*,
-where we specify how many separate *jobs* we want running in parallel instead.
+where we specify how many *separate jobs* (as *tasks*) we want running in parallel instead.
 
+One way we might do this is using a simple for loop within a Bash script to submit multiple jobs.
+For example, to submit three jobs, we could do:
 
+~~~
+for JOB_NUMBER in {1..3}; do
+    sbatch a-script.sh $JOB_NUMBER
+done
+~~~
+{: .language-bash}
+
+In certain circumstances this may be a suitable approach,
+particularly if each task differs substantially, and you need to control over each subtask explicitly
+or change configuration resource request parameters for each job task.
+
+However, job arrays have some unique advantages over this approach;
+namely that job arrays are *self-contained*, so each array task is linked to the same job submission ID,
+which means we can use `sacct` and `squeue` to query them as a whole submission.
+Plus, we need no additional code to make it work, so it's generally a simpler way to do it.
+
+To make use of a job array approach in a Slurm we add an additional `--array` parameter to our submission script.
+So let's create a new `hw_serial_array.sh` script that uses it:
+
+~~~
+#!/usr/bin/env bash
+#SBATCH --account=yourAccount
+#SBATCH --partition=aPartition
+#SBATCH --job-name=hello_world_serial_array
+#SBATCH --array=1-3
+#SBATCH --time=00:01:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --mem=1M
+
+echo "Task $SLURM_ARRAY_TASK_ID"
+./hello_world_serial
+sleep 30
+~~~
+{: .language-bash}
+
+`$SLURM_ARRAY_TASK_ID` is a shell environment variable that holds the number of the individual task running.
+
+Given the jobs are trivial and finish very quickly,
+we've added a `sleep 30` command at the end so each task takes an additional 30 seconds to run,
+so that you should be able to see the array job in the queue before it disappears from the list.
+If we now submit this job with `sbatch` and then use `squeue -j jobID` we should see something like the following,
+a single entry but with `[1-3]` in the `JOBID` indicating the three subtasks as part of this job:
+
+~~~
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+     6803105_[1-3] cosma7-pa hello_wo dc-crou1 PD       0:00      1 (Priority)
+~~~
+{: .output}
+
+> ## Canceling Array Jobs
+> 
+> We are able to completely cancel an array job and all its tasks using `scancel jobID` as with a normal job.
+> With the job above, `scancel 6803105` would do this, as would `scancel 6803105_[1-3]`,
+> where we indicate explicitly all the tasks in the range `1-3`.
+> But we're able to cancel individual tasks as well using, for example, `scancel 6803205_1` for the first task.
+> 
+> Submit the array job again and use `scancel` to cancel only the second and third tasks.
+> 
+> > ## Solution
+> > 
+> > ~~~
+> > [yourUsername@login7a [cosma7] ~]$ scancel 6803205_2
+> > [yourUsername@login7a [cosma7] ~]$ scancel 6803205_3
+> > ~~~
+> > {: .language-bash}
+> > 
+> > Or:
+> >
+> > ~~~
+> > [yourUsername@login7a [cosma7] ~]$ scancel 6803205_[2-3]
+> > ~~~
+> > {: .language-bash}
+> >
+> > As with cancelling a normal job, the `slurm-` output log files for tasks will still be produced containing any output
+> > up until the point the tasks are cancelled.
+> {: .solution}
+{: .challenge}
 
 ## Interactive
 
+We've seen that we can use the login nodes on an HPC resource to test our code (in a small way) before we submit it.
+But sometimes when developing more complex code it would be useful to have access in some way to the compute nodes themselves,
+particularly to explore or debug an issue.
+For this we can use interactive jobs.
+
+By reserving a compute note explicitly for this purpose,
+an interactive job will grant us an interactive session on a compute node that meets our job requirements,
+although of course, as with any job, this may not be granted immediately!
+Then, once the interactive session is running, we are able to enter commands and have their output visible on our
+terminal as if we had direct access to the compute node.
+
+To submit a request for an interactive job where we wish to reserve a single node and two cores,
+we can use Slurm's `srun` command:
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ srun --account=yourAccount --partition=aPartition --nodes=1 --ntasks-per-node=2 --time=00:10:00 --pty /bin/bash
+~~~
+{: .language-bash}
+
+So as well as the account/partition and the number of nodes and cores, 
+we are requesting 10 minutes of interactive time (after which the interactive job will exit),
+and that the job will run a Bash shell on the node which we'll use to interact with the job.
+
+You should see the following, indicating the job is waiting, and then hopefully soon afterwards,
+that the job has been allocated a suitable node:
+
+~~~
+srun: job 5608962 queued and waiting for resources
+srun: job 5608962 has been allocated resources
+FIXME: add prompt
+~~~
+{: .output}
+
+At this point our interactive job is running our Bash shell remotely.
+We can verify that we are on a compute node by entering `hostname`,
+which will return the host name of the compute node on which the job is running.
+
+At this point, we are able to use the `module`, `srun` and other commands
+as they might appear within our job submission scripts:
+
+~~~
+FIXME prompt $ srun --ntasks=2 ./hello_world_mpi
+~~~
+{: .language-bash}
+
+Hence, if we encounter issues
+
+Importantly, note that whilst the terminal is active your allocation is consuming budget,
+just as with a normal job, so be very aware to not leave an interactive session idle!
+When you wish to exit your session use `exit`, or `Ctrl-D`.
+You can check that your session is completed using `squeue -j` with the job ID as normal.
+
+> ## Combined Power (with a Note of Caution)
+> 
+> For many job types it may also make sense to combine them together.
+> As we've seen we're able to run MPI jobs on a compute node over an interactive session,
+> and one very powerful approach to parallelism involves using both multi-threaded (OpenMP) *and* multi-process (MPI)
+> at the same time (known as hybrid OpenMP/MPI).
+> and it's very possible to also configure jobs to make use of job arrays with these approaches too.
+> 
+> As you may imagine, using multiple approaches offers tremendous flexibility and power to vastly scale what you are
+> able to accomplish,
+> although it's worth remembering that these also have the tradeoff of consuming more resources, and thus more budget,
+> at a commensurate rate.
+> When running applications (or developing applications to run) on HPC resources
+> it's therefore strongly recommended to first start with small, simple
+> jobs until you have high confidence their behaviour is correct.
+{: .callout}
