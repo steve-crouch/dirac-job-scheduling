@@ -85,7 +85,7 @@ For these parameters, by default a *task* refers to a single CPU unless otherwis
 
 - `--nodes` - the total number of machines or nodes to request
 - `--ntasks` - the total number of CPU cores (across requested nodes) your job needs. Generally, this will be 1 unless you're running MPI jobs which are
-able to use multiple CPU cores. In which case, it essentially specifies the number of MPI ranks to start across the nodes. For example, if `--nodes=4` and `--ntasks=8`, we're requesting 4 nodes each with 2 CPUs
+able to use multiple CPU cores. In which case, it essentially specifies the number of MPI ranks to start across the nodes. For example, if `--nodes=4` and `--ntasks=8`, we're requesting 4 nodes each with 2 CPUs. We'll see an example of using `--ntasks` with MPI in a later episode.
 
 > ## Being Specific
 >
@@ -110,7 +110,7 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 > > ~~~
 > > [yourUsername@login7a [cosma7] ~]$ sbatch multi-node-job.sh
 > > ...
-> > [yourUsername@login7a [cosma7] ~]$ squeue -U yourUsername
+> > [yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
 > > ~~~
 > > {: .language-bash}
 > >
@@ -208,7 +208,12 @@ You may find it looks like this:
 ~~~
 {: .output}
 
-We can see all the details of our job, including the partition, user, and also the state of the job (in the `ST` column). In this case, we can see it is in the PD or PENDING state.
+So `-u yourUsername` shows us all jobs associated with our machine account. We can also use `-j` to query specific
+job IDs, e.g.: `squeue -j 5791510` which will, in this case, yield the same information since we only have that job
+in the queue (if it hasn't already completed!).
+
+In either case, we can see all the details of our job, including the partition, user, and also the state of the job (in the `ST` column).
+In this case, we can see it is in the PD or PENDING state.
 Typically, a successful job run will go through the following states:
 
 - `PD` - *pending*: sometimes our jobs might need to wait in a queue first before they can be allocated to a node to run. 
