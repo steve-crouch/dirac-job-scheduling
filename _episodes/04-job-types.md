@@ -180,8 +180,6 @@ within the master thread, and outputs the results array containing all the worke
 Now before we compile and test it, we need to indicate how many threads we wish to run,
 which is specified in the environment in a special variable and picked up by the program, so we'll do that first:
 
-FIXME: use a submission script instead
-
 ~~~
 [yourUsername@login7a [cosma7] ~]$ export OMP_NUM_THREADS=3
 [yourUsername@login7a [cosma7] ~]$ gcc hello_world_mp.c -o hello_world_mp
@@ -381,7 +379,21 @@ a single entry but with `[1-3]` in the `JOBID` indicating the three subtasks as 
 
 ~~~
              JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-     6803105_[1-3] cosma7-pa hello_wo dc-crou1 PD       0:00      1 (Priority)
+     6803105_[1-3] cosma7-pa hello_wo yourUser PD       0:00      1 (Priority)
+~~~
+{: .output}
+
+Once complete, we'll find three separate job output log files: `6803105_1`, `6803105_2`, and `6803105_3`,
+each corresponding to a specific task.
+For example for `6803105_1`, depending on our HPC resource we will see something like:
+
+~~~
+====
+Starting job 6803508 at Mon 19 Feb 19:39:46 GMT 2024 for user yourUsername.
+Running on nodes: m7315
+====
+Task 1
+Hello world!
 ~~~
 {: .output}
 
@@ -445,28 +457,34 @@ that the job has been allocated a suitable node:
 ~~~
 srun: job 5608962 queued and waiting for resources
 srun: job 5608962 has been allocated resources
-FIXME: add prompt
+[yourUsername@m7443 ~]$ 
 ~~~
 {: .output}
 
-At this point our interactive job is running our Bash shell remotely.
-We can verify that we are on a compute node by entering `hostname`,
+At this point our interactive job is running our Bash shell remotely on compute node *m7443*.
+We can also verify that we are on a compute node by entering `hostname`,
 which will return the host name of the compute node on which the job is running.
 
 At this point, we are able to use the `module`, `srun` and other commands
 as they might appear within our job submission scripts:
 
 ~~~
-FIXME prompt $ srun --ntasks=2 ./hello_world_mpi
+[yourUsername@m7443 ~]$ srun --ntasks=2 ./hello_world_mpi
 ~~~
 {: .language-bash}
 
-Hence, if we encounter issues
+Hence, if this MPI code were faulty,
+as we encounter issues we have the opportunity to diagnose them in real time,
+fix them, and re-run our code to test it again.
 
-Importantly, note that whilst the terminal is active your allocation is consuming budget,
-just as with a normal job, so be very aware to not leave an interactive session idle!
 When you wish to exit your session use `exit`, or `Ctrl-D`.
 You can check that your session is completed using `squeue -j` with the job ID as normal.
+
+> ## Interactive Sessions: Watch your Budget!
+> 
+> Importantly, note that whilst the terminal is active your allocation is consuming budget,
+> just as with a normal job, so be very aware to not leave an interactive session idle!
+{: .callout}
 
 > ## Combined Power (with a Note of Caution)
 > 
