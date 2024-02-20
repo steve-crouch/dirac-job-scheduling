@@ -180,8 +180,6 @@ within the master thread, and outputs the results array containing all the worke
 Now before we compile and test it, we need to indicate how many threads we wish to run,
 which is specified in the environment in a special variable and picked up by the program, so we'll do that first:
 
-FIXME: use a submission script instead
-
 ~~~
 [yourUsername@login7a [cosma7] ~]$ export OMP_NUM_THREADS=3
 [yourUsername@login7a [cosma7] ~]$ gcc hello_world_mp.c -o hello_world_mp
