@@ -7,23 +7,25 @@ questions:
 - "How do I request specific resources to use for a job?"
 - "What is the life cycle of a job?"
 - "What can I do to specify how my job will run?"
-- "How can I find out the status of my running jobs?"
+- "How can I find out the status of my running or completed jobs?"
 objectives:
-- "First learning objective. (FIXME)"
+- "Determine queues to which you have access."
+- "Specify a job's resource requirements in a Slurm batch script."
+- "Describe the main states a job passess through from start to completion."
+- "Describe the major ways a job may fail and how that's presented."
+- "Cancel multiple jobs using a single command."
+- "Describe how backfilling works and why it's useful."
+- "Obtain greater detail regarding the status of a jobs and its use of resources."
 keypoints:
-- "First key point. Brief Answer to questions. (FIXME)"
+- "Use `sinfo -s` to see information on all queues to which you have access."
+- "Use `--nodes` and `--ntasks` in a Slurm batch script to request the total number of machines and CPU cores you'd like for your job."
+- "A typical job passes through pending, running, completing, and completed job states."
+- "Reasons for a job's failure include being out of memory, being suspended, cancelled, or exiting with a non-zero exit code."
+- "Determinig backfill windows allows us to determine when we may make use of idle resources."
+- "Use `scontrol` to present detailed information concerning a submitted job."
+- "Use `sstat` to query the used resources for an actively running job."
+- "Use `sacct` to query the resource accounting information for a completed job."
 ---
-
-> ## Recap: Basics of Job Submission
-> 
-> FIXME: very basic sbatch, script files (with account and partition) and squeue
->
-> ### A Reminder: Where's the Output?
-> 
-> By default Slurm job output is found in your home directory, and the output file looks like `slurm-<job_number>.out`,
-> with `<job_number>` representing the unique identifier for the job.
-> Use `ls` to find the file and `cat` with the output file name to read the file.
-{: .callout}
 
 ## Selecting Resources for Jobs
 
@@ -67,8 +69,6 @@ It indicates how many nodes are:
 The `NODELIST` is a summary of those nodes in a particular queue.
 
 ### Specifying Job Resource Requirements
-
-FIXME: --ntasks, --nodes, --tasks-per-node, --cpus-per-task, --exclusive
 
 One thing that is absolutely critical when working on an HPC system
 is specifying the resources required to run a job, which allows the scheduler to
@@ -115,8 +115,8 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 > > {: .language-bash}
 > >
 > > ~~~
-> > JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-> > 6485195 cosma7-pa mul-job. dc-crou1  R       0:05      3 m[7400-7402]
+> >   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+> > 6485195 cosma7-pa mul-job. yourUse+  R       0:05      3 m[7400-7402]
 > > ~~~
 > > {: .output}
 > > 
@@ -402,8 +402,8 @@ We can then use this job ID to ask Slurm for more information about it:
 
 ~~~
 JobId=6484457 JobName=specific-job
-   UserId=dc-crou1(21859) GroupId=ds007(20133) MCS_label=N/A
-   Priority=100001 Nice=0 Account=ds007 QOS=normal
+   UserId=yourUsername(21859) GroupId=yourAccount(20133) MCS_label=N/A
+   Priority=100001 Nice=0 Account=yourAccount QOS=normal
    JobState=RUNNING Reason=None Dependency=(null)
    Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
    RunTime=00:00:08 TimeLimit=00:01:00 TimeMin=N/A
@@ -421,11 +421,11 @@ JobId=6484457 JobName=specific-job
    MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0
    Features=(null) DelayBoot=00:00:00
    OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
-   Command=/cosma/home/ds007/userHome/example-job.sh
-   WorkDir=/cosma/home/ds007/userHome
-   StdErr=/cosma/home/ds007/userHome/slurm-6484457.out
+   Command=/cosma/home/yourAccount/userHome/example-job.sh
+   WorkDir=/cosma/home/yourAccount/userHome
+   StdErr=/cosma/home/yourAccount/userHome/slurm-6484457.out
    StdIn=/dev/null
-   StdOut=/cosma/home/ds007/userHome/slurm-6484457.out
+   StdOut=/cosma/home/yourAccount/userHome/slurm-6484457.out
    Power=
 ~~~
 {: .output}
@@ -468,11 +468,177 @@ you to enter subcommands (like `show` or `update`) directly to the `scontrol` co
 
 ## Querying Job Resources
 
-FIXME: use a larger code example they get from github with sstat and sacct. Code needs a fairish amount of memory, CPUS.
+For more detail about jobs and the resources, there are two key Slurm commands we can use to give us more information about jobs
+that are either actively running (using `sstat`) or completed (using `sacct`).
 
-FIXME: sstat - which resources is a job currently using? e.g. sstat --format=AveCPU,AveCPUFreq,NTasks,MinCPU,MinCPUTask,MaxDiskWrite,MaxVMSizeNode -j 6485359.batch
-FIXME: in callout, also show cosma's c{5,7,8}jobload - more convenient
+### Querying Running Jobs
 
-FIXME: sacct - same, but for completed jobs. e.g. sacct --jobs 6485202 --format JobID,AllocCPUS,Elapsed,CPUTime - explain cputime = elapsed * alloccpus
+First, submit our previous job script `specific-job.sh` using `sbatch`,
+then check when it's actually running using `squeue` (since `sstat` will only work on actively running jobs),
+and then when we know it's running we can use `sstat` to query which resources it's using.
+Note that it's probably a good idea to increase the `25` value for `sleep` in the job script
+so you have more time to query the job before it completes!
 
-FIXME: end exercise - again using the example code on github. Submit first using a large amount of resources, then using sacct refine the requests until they are representative of what the job actually needs
+For example, following submission via `sbatch`:
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ squeue -j 6803898
+~~~
+{: .language-bash}
+
+Wait until it reaches the running state designated by `R`:
+
+~~~
+  JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+5791551 cosma7-pa hello-wo yourUser  R       0:00      1 (Priority)
+~~~
+{: .output}
+
+Since we now know it's running, we may query its active resource usage to date.
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ sstat -j 6803898
+~~~
+{: .language-bash}
+
+The first line of output is presented as a series of columns representing the various properties - or fields - associated with the job,
+but unfortunately you'll notice that with so many columns it renders the output quite unreadable!
+Fortunately we can select which columns we wish to see, e.g.:
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ sstat -j 6803898 --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
+~~~
+{: .language-bash}
+
+So here, we've selected a number of field columns we're interested in:
+
+- `JobID` - the ID of the job, useful if we happen to specify multiple jobs to query, e.g. `-j 6803898,6803899,6803900`.
+- `AveCPU` - the average CPU time of the job
+- `NTasks` - total number of tasks in a job
+- `MinCPU` - the minimum CPU time used in a job
+- `MaxDiskWrite` - the maximum number of bytes written by the job
+
+But looking at the output, you'll notice there is no information is returned other than the field headers:
+
+~~~
+JobID            AveCPU   NTasks     MinCPU MaxDiskWrite
+------------ ---------- -------- ---------- ------------ 
+~~~
+{: .output}
+
+To see information about the job we need to add a flag to the command:
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ sstat --allsteps -j 6803898 --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
+~~~
+{: .language-bash}
+
+> ## Anatomy of a Job
+> 
+> So Why Use `--allsteps`?
+> This is because, by default, all jobs are actually made up of a number of job *steps*.
+> A job that consists of only a batch script, like this one, typically only has two steps:
+> a *batch step*, which is created for all jobs submitted with `sbatch`,
+> and an *extern* step, which accounts for resources used by a job outside of aspects managed by Slurm
+> (which includes special cases such as SSH-ing into the compute node, which may be allowed on some systems
+> and would be accounted here).
+> A job may also have additional steps,
+> for example with MPI jobs there will be extra processes launched which are accounted for as separate steps,
+> and will be listed separately.
+> In our case, all processing is accounted for in the `batch` step, so we need to query that directly,
+> since by default, `sstat` doesn't include this.
+{: .callout}
+
+And now we should see something like:
+
+~~~
+JobID            AveCPU   NTasks     MinCPU MaxDiskWrite
+------------ ---------- -------- ---------- ------------
+6803898.ext+   00:00:00        1   00:00:00        1.00M
+6803898.bat+   00:00:00        1   00:00:00           66
+~~~
+{: .output}
+
+The `+` indicates the column value is truncated; in this case `ext` refers to `extern`, and `bat` refers to `batch`.
+
+In this trivial case, so far we can see that we've used virtually no actual CPU,
+and the batch submission script has written a total of 66 bytes,
+with 1MB of other data written by the job's `extern` step.
+
+> ## What About other Fields?
+> 
+> We've looked at some example fields, but yhere are *many* others that you may wish to consider,
+> which you can find in the [Slurm documentation](https://slurm.schedmd.com/sstat.html#SECTION_Job-Status-Fields).
+> 
+> Another way to get help on the field formats is to use `sstat --helpformat`,
+> which handily gives you a list of all fields you can use.
+{: .callout}
+
+### Querying Completed Jobs
+
+Once a job is complete, since it only operates on active jobs you'll notice that `sstat` no longer presents resource usage.
+For jobs that have completed, we use `sacct`, which displays accounting data for Slurm jobs.
+
+We can first use `sacct` to list the completed jobs for today:
+
+~~~
+JobID           JobName  Partition    Account  AllocCPUS      State ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- -------- 
+6803854            bash cosma7-pa+ yourAccou+         28    TIMEOUT      0:0 
+6803854.ext+     extern            yourAccou+         28  COMPLETED      0:0 
+6803854.0          bash            yourAccou+         28  COMPLETED      0:0 
+6803898      specific-+ cosma7-pa+ yourAccou+         28  COMPLETED      0:0 
+6803898.bat+      batch            yourAccou+         28  COMPLETED      0:0 
+6803898.ext+     extern            yourAccou+         28  COMPLETED      0:0 
+6804261_1    hello_wor+ cosma7-pa+ yourAccou+         28  COMPLETED      0:0 
+6804261_1.b+      batch            yourAccou+         28  COMPLETED      0:0 
+6804261_1.e+     extern            yourAccou+         28  COMPLETED      0:0 
+6804261_2    hello_wor+ cosma7-pa+ yourAccou+         28  COMPLETED      0:0 
+6804261_2.b+      batch            yourAccou+         28  COMPLETED      0:0 
+6804261_2.e+     extern            yourAccou+         28  COMPLETED      0:0 
+6804261_3    hello_wor+ cosma7-pa+ yourAccou+         28  COMPLETED      0:0 
+6804261_3.b+      batch            yourAccou+         28  COMPLETED      0:0 
+6804261_3.e+     extern            yourAccou+         28  COMPLETED      0:0 
+~~~
+{: .output}
+
+Or, for a specific job:
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ sacct -j 6803898
+~~~
+{: .language-bash}
+
+Which will display accounting information for a given job, including its constituent steps
+(and we don't need to use `--allsteps` to collate this information).
+
+By default, we'll see something like the following:
+
+~~~
+JobID           JobName  Partition    Account  AllocCPUS      State ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- -------- 
+6803898      specific-+ cosma7-pa+ yourAccou+         28  COMPLETED      0:0 
+6803898.bat+      batch            yourAccou+         28  COMPLETED      0:0 
+6803898.ext+     extern            yourAccou+         28  COMPLETED      0:0 
+~~~
+{: .output}
+
+As with `sstat`, we are also able to customise the fields we wish to see, e.g.:
+
+~~~
+[yourUsername@login7a [cosma7] ~]$ sacct -j 6803898 --format=JobID,JobName,Partition,Account,AllocCPUS,State,Elapsed,CPUTime
+~~~
+{: .language-bash}
+
+~~~
+JobID           JobName  Partition    Account  AllocCPUS      State    Elapsed    CPUTime 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
+6803898      specific-+ cosma7-pa+ yourAccou+         28  COMPLETED   00:00:25   00:11:40 
+6803898.bat+      batch            yourAccou+         28  COMPLETED   00:00:25   00:11:40 
+6803898.ext+     extern            yourAccou+         28  COMPLETED   00:00:25   00:11:40
+~~~
+{: .callout}
+
+As with `sstat`, you can add many [other fields](https://slurm.schedmd.com/sacct.html#SECTION_Job-Accounting-Fields) too,
+although note the accounting data presented for these will be different depending on the HPC system's configuration and the job's type.
+CPUTime here is equal to `AllocCPUs * Elapsed`, i.e. the number of CPUs allocated to the job multiplied by the total elapsed time.
