@@ -12,9 +12,13 @@ questions:
 objectives:
 - "Describe briefly what a job scheduler does."
 - "Recap the fundamentals of Slurm job submission and monitoring."
+- "Summarise the main ways researchers may request time on a DiRAC facility."
 keypoints:
 - "A job scheduler ensures jobs are given the resources they need, and manages when and where jobs will run on an HPC resource."
 - "We use `sbatch` and `squeue` to submit jobs and query their status."
+- "Access to DiRAC's resources is managed through the STFC's independent Resource Allocation Committee (RAC)."
+- "Facility time may be requested through a number of mechanisms, namely in response to a Call for Proposals, the Director's Discretionary Award, and Seedcorn Time."
+- "The [DiRAC website](https://dirac.ac.uk/getting-access/) has further information on the methods to request access, as well as application forms."
 ---
 
 
@@ -47,7 +51,7 @@ A job script (e.g. `basic-script.sh`) is typically written using the
 [Bash shell](https://www.gnu.org/software/bash/manual/bash.html) language and looks something like this:
 
 ~~~
-#!/bin/bash -l
+#!/usr/bin/env bash
 #SBATCH --account=yourAccount
 #SBATCH --partition=aPartition
 #SBATCH --time=00:00:30
@@ -70,8 +74,29 @@ Once complete, we are able to read the job's log file (or files), typically held
 which show us any printed output from a job,
 and depending on the HPC system, other information regarding how and where the job ran.
 
+
 ## DiRAC Project Allocations
 
+[Access to DiRAC's resources](https://dirac.ac.uk/getting-access/) is managed through the STFC's independent Resource Allocation Committee (RAC),
+which provides access through allocations to researchers who request time on the facility.
+There are a number of mechanisms through which facility time can be requested:
+
+- **Call for full Proposals**: the RAC puts out an annual invitation to the UK theory and modelling communities to apply for computational resources on the DiRAC HPC Facility, with applications taking the form of scientific, technical, or Research Software Engineer support (RSE) time.
+- **Director's Discretionary Award**: from time to time the DiRAC Director invites the UK theory and modelling communities to apply for discretionary allocations of computational resources. Discretionary time can also be applied for if you find you will be using your code at a larger scale than was previously requested in a full call for proposals. Applications can be made at any time.
+- **Seedcorn Time**: for researchers who would like to get a feel for HPC, test and benchmark codes, or see what  DiRAC resources can do for you before making a full application, an application can be made for seedcorn time. Existing users may also apply for seedcorn allocations to enable code development/testing on a service that is not currently part of their project allocation. You can apply for Seedcorn Time at any time.
+
+For more information regarding these options,
+and for online application forms and contact details for enquiries, see the [DiRAC website](https://dirac.ac.uk/getting-access/).
+
+Once the submission and its technical case has been approved,
+allocations are managed within time is allocated in 3-month chunks over the duration of the project,
+which may be over a period of years.
+Allocation usage is based primarily on core CPU hours or GPU hours.
+Following a 3-month allocation project usage is reviewed and extended based on that review
+(for instance, any non-use of the allocation during that 3-month window is queried,
+with support provided to overcome any barriers to use.)
+In addition, Research Software Engineering (RSE) support time may also be requested,
+who can provide help with code optimisation, porting, re-factoring and performance analysis.
 
 
 ## Understanding Queues

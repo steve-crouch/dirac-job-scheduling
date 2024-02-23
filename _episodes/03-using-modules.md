@@ -73,7 +73,7 @@ you are using.
 To see available software modules, use `module avail`:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ module avail
+module avail
 ~~~
 {: .language-bash}
 
@@ -129,7 +129,7 @@ loaded in your environment. If you have no modules loaded, you will see a
 message telling you so
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ module list
+module list
 ~~~
 {: .language-bash}
 
@@ -185,7 +185,7 @@ command.
 it to tell us where a particular piece of software is stored.
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ which julia
+which julia
 ~~~
 {: .language-bash}
 
@@ -200,8 +200,8 @@ environment:
 So we can now try to load the Julia module with `module load`:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ module load julia
-[yourUsername@login7a [cosma7] ~]$ which julia
+module load julia
+which julia
 ~~~
 {: .language-bash}
 
@@ -234,7 +234,7 @@ before giving up and telling us it can't find it. As with all environment
 variables we can print it out using `echo`.
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ echo $PATH
+echo $PATH
 ~~~
 {: .language-bash}
 
@@ -249,7 +249,7 @@ ran the `module load` command, it added a directory to the beginning of our
 `$PATH`. Let's examine what's there (your particular path may differ):
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ ls /cosma/local/julia/1.9.1
+ls /cosma/local/julia/1.9.1
 ~~~
 {: .language-bash}
 
@@ -275,7 +275,7 @@ required software dependencies as well,
 > To demonstrate, on DiRAC's COSMA resource, let's assume we want to load a particular version of OpenMPI:
 > 
 > ~~~
-> [yourUsername@login7a [cosma7] ~]$ module load openmpi/4.1.4
+> module load openmpi/4.1.4
 > ~~~
 > {: .language-bash}
 > 
@@ -317,7 +317,7 @@ If we need such detail, we are able to see the changes that would be made to our
 For example:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ module display julia/1.9.1
+module display julia/1.9.1
 ~~~
 {:. language-bash}
 
@@ -345,8 +345,8 @@ Once Julia is loaded, we are thus able to then use `man julia` to access its man
 > Depending on how your system is configured this may be possible, e.g.
 > 
 > ~~~
-> [yourUsername@login7a [cosma7] ~]$ module load julia/1.9.1
-> [yourUsername@login7a [cosma7] ~]$ module load julia/1.5.3
+> module load julia/1.9.1
+> module load julia/1.5.3
 > ~~~
 > {: .language-bash}
 > 
@@ -368,7 +368,7 @@ In general, it's always good practice to unload modules you aren't currently usi
 For example, assuming we already have Julia loaded, we can unload it using, e.g.:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ module unload julia
+module unload julia
 ~~~
 {: .language-bash}
 
@@ -408,7 +408,7 @@ But we aware that this will also remove any modules that are loaded automaticall
 > > {: .language-bash}
 > >
 > > ~~~
-> > [yourUsername@login7a [cosma7] ~]$ sbatch julia-module.sh
+> > sbatch julia-module.sh
 > > ~~~
 > > {: .language-bash}
 > {: .solution}

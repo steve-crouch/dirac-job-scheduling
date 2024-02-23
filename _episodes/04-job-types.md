@@ -61,8 +61,8 @@ int main(int argc, char** argv) {
 After copying this into a file called `hello_world_serial.c`, we can then compile and run it, e.g.:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ gcc hello_world_serial.c -o hello_world_serial
-[yourUsername@login7a [cosma7] ~]$ ./hello_world_serial
+gcc hello_world_serial.c -o hello_world_serial
+./hello_world_serial
 ~~~
 
 Depending on your system, you may need to preload a module to compile C (perhaps either using `cc` or `gcc`).
@@ -181,9 +181,9 @@ Now before we compile and test it, we need to indicate how many threads we wish 
 which is specified in the environment in a special variable and picked up by the program, so we'll do that first:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ export OMP_NUM_THREADS=3
-[yourUsername@login7a [cosma7] ~]$ gcc hello_world_mp.c -o hello_world_mp
-[yourUsername@login7a [cosma7] ~]$ ./hello_world_mp
+export OMP_NUM_THREADS=3
+gcc hello_world_mp.c -o hello_world_mp
+./hello_world_mp
 ~~~
 {: .language-bash}
 
@@ -268,8 +268,8 @@ since with MPI, typically all processes run the entire program.
 Let's compile this now. On DiRAC's COSMA, this looks like:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ module load gnu_comp/13.1.0
-[yourUsername@login7a [cosma7] ~]$ mpicc hello_world_mpi.c -o hello_world_mpi
+module load gnu_comp/13.1.0
+mpicc hello_world_mpi.c -o hello_world_mpi
 ~~~
 {: .language-bash}
 
@@ -409,15 +409,15 @@ Hello world!
 > > ## Solution
 > > 
 > > ~~~
-> > [yourUsername@login7a [cosma7] ~]$ scancel 6803205_2
-> > [yourUsername@login7a [cosma7] ~]$ scancel 6803205_3
+> > scancel 6803205_2
+> > scancel 6803205_3
 > > ~~~
 > > {: .language-bash}
 > > 
 > > Or:
 > >
 > > ~~~
-> > [yourUsername@login7a [cosma7] ~]$ scancel 6803205_[2-3]
+> > scancel 6803205_[2-3]
 > > ~~~
 > > {: .language-bash}
 > >
@@ -443,7 +443,7 @@ To submit a request for an interactive job where we wish to reserve a single nod
 we can use Slurm's `srun` command:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ srun --account=yourAccount --partition=aPartition --nodes=1 --ntasks-per-node=2 --time=00:10:00 --pty /bin/bash
+srun --account=yourAccount --partition=aPartition --nodes=1 --ntasks-per-node=2 --time=00:10:00 --pty /bin/bash
 ~~~
 {: .language-bash}
 

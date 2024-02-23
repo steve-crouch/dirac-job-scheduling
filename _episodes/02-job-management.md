@@ -35,7 +35,7 @@ Before we submit a job, we need to specify a queue to which it will be submitted
 You can find out the queues you have access rights for, and their state, using:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sinfo -s
+sinfo -s
 ~~~
 {: .language-bash}
 
@@ -108,9 +108,9 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 > > {: .language-bash}
 > > 
 > > ~~~
-> > [yourUsername@login7a [cosma7] ~]$ sbatch multi-node-job.sh
+> > sbatch multi-node-job.sh
 > > ...
-> > [yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
+> > squeue -u yourUsername
 > > ~~~
 > > {: .language-bash}
 > >
@@ -196,7 +196,7 @@ OpenMP, you can specify how many threads it needs using this parameter.
 As we've seen, we can check on our job's status by using the command `squeue`. Let's take a look in more detail.
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
+squeue -u yourUsername
 ~~~
 {: .language-bash}
 
@@ -243,8 +243,8 @@ its job number (remember to change the walltime so that it runs long enough for
 you to cancel it before it is killed!).
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
-[yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
+sbatch example-job.sh
+squeue -u yourUsername
 ~~~
 {: .language-bash}
 
@@ -261,9 +261,9 @@ return of your command prompt indicates that the request to cancel the job was
 successful.
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ scancel 5791551
+scancel 5791551
 # It might take a minute for the job to disappear from the queue...
-[yourUsername@login7a [cosma7] ~]$ squeue -u yourUsername
+squeue -u yourUsername
 ~~~
 {: .language-bash}
 
@@ -283,16 +283,16 @@ successful.
 > > First, submit a trio of jobs:
 > >
 > > ~~~
-> > [yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
-> > [yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
-> > [yourUsername@login7a [cosma7] ~]$ sbatch example-job.sh
+> > sbatch example-job.sh
+> > sbatch example-job.sh
+> > sbatch example-job.sh
 > > ~~~
 > > {: .language-bash}
 > >
 > > Then, cancel them all:
 > >
 > > ~~~
-> > [yourUsername@login7a [cosma7] ~]$ scancel -u yourUsername
+> > scancel -u yourUsername
 > > ~~~
 > > {: .language-bash}
 >{: .solution}
@@ -311,7 +311,7 @@ specify a shorter time period for jobs.
 You can check if a particular Slurm scheduler is configured to use a backfill technique by doing the following:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ scontrol show config | grep SchedulerType
+scontrol show config | grep SchedulerType
 ~~~
 {: .language-bash}
 
@@ -333,7 +333,7 @@ are any free resources to run your job immediately.
 > (e.g. for COSMA5, COSMA7,and COSMA8) by using a particular backfill command. For example, for COSMA5:
 > 
 > ~~~
-> [yourUsername@login7a [cosma7] ~]$ c5backfill
+> c5backfill
 > ~~~
 > {: .language-bash}
 > 
@@ -381,7 +381,7 @@ hostname
 Next, launch our new job:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sbatch specific-job.sh
+sbatch specific-job.sh
 ~~~
 {: .language-bash}
 
@@ -396,7 +396,7 @@ Submitted batch job 6484453
 We can then use this job ID to ask Slurm for more information about it:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ scontrol show jobid=6484453
+scontrol show jobid=6484453
 ~~~
 {: .language-bash}
 
@@ -482,7 +482,7 @@ so you have more time to query the job before it completes!
 For example, following submission via `sbatch`:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ squeue -j 6803898
+squeue -j 6803898
 ~~~
 {: .language-bash}
 
@@ -497,7 +497,7 @@ Wait until it reaches the running state designated by `R`:
 Since we now know it's running, we may query its active resource usage to date.
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sstat -j 6803898
+sstat -j 6803898
 ~~~
 {: .language-bash}
 
@@ -506,7 +506,7 @@ but unfortunately you'll notice that with so many columns it renders the output 
 Fortunately we can select which columns we wish to see, e.g.:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sstat -j 6803898 --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
+sstat -j 6803898 --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
 ~~~
 {: .language-bash}
 
@@ -529,7 +529,7 @@ JobID            AveCPU   NTasks     MinCPU MaxDiskWrite
 To see information about the job we need to add a flag to the command:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sstat --allsteps -j 6803898 --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
+sstat --allsteps -j 6803898 --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
 ~~~
 {: .language-bash}
 
@@ -605,7 +605,7 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 Or, for a specific job:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sacct -j 6803898
+sacct -j 6803898
 ~~~
 {: .language-bash}
 
@@ -626,7 +626,7 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 As with `sstat`, we are also able to customise the fields we wish to see, e.g.:
 
 ~~~
-[yourUsername@login7a [cosma7] ~]$ sacct -j 6803898 --format=JobID,JobName,Partition,Account,AllocCPUS,State,Elapsed,CPUTime
+sacct -j 6803898 --format=JobID,JobName,Partition,Account,AllocCPUS,State,Elapsed,CPUTime
 ~~~
 {: .language-bash}
 
