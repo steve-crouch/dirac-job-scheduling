@@ -182,7 +182,7 @@ which is specified in the environment in a special variable and picked up by the
 
 ~~~
 export OMP_NUM_THREADS=3
-gcc hello_world_mp.c -o hello_world_mp
+gcc hello_world_mp.c -o hello_world_mp -fopenmp
 ./hello_world_mp
 ~~~
 {: .language-bash}
