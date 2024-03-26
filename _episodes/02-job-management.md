@@ -39,6 +39,9 @@ sinfo -s
 ~~~
 {: .language-bash}
 
+The `-s` curtails the output to only a summary,
+whereas using this flag provides a full listing of nodes in each queue and their current state.
+
 You should see something like the following, although this will vary for each DiRAC resource:
 
 ~~~
