@@ -35,7 +35,7 @@ in a restaurant. If you can relate to an instance where you had to wait for a
 while in a queue to get in to a popular restaurant, then you may now understand
 why sometimes your job does not start instantly as on your laptop.
 
-![Compare a job scheduler to a waiter in a restaurant]({{ page.root }}{% link fig/restaurant_queue_manager.svg %}){: width="650px"}
+![Compare a job scheduler to a waiter in a restaurant]({{ site.url }}{{ site.baseurl }}/fig/restaurant_queue_manager.svg){: width="650px"}
 
 The scheduler used here is Slurm, and although
 Slurm is not used everywhere, running jobs is quite similar
@@ -89,7 +89,7 @@ For more information regarding these options,
 and for online application forms and contact details for enquiries, see the [DiRAC website](https://dirac.ac.uk/getting-access/).
 
 Once the submission and its technical case has been approved,
-allocations are managed within time is allocated in 3-month chunks over the duration of the project,
+allocations are managed within in 3-month chunks over the duration of the project,
 which may be over a period of years.
 Allocation usage is based primarily on core CPU hours or GPU hours.
 Following a 3-month allocation project usage is reviewed and extended based on that review
