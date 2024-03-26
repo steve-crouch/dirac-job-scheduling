@@ -127,7 +127,7 @@ Each worker thread works independently, taking care of its task.
 Then, once all the workers are done, they come back to the leader, and the leader continues with the rest of the program.
 
 Let's look at a parallel version of hello world, which launches a number of threads.
-You can find the code below in [hello_world_mp.c](code/job_types/hello_world_mp.c).
+You can find the code below in [hello_world_omp.c](code/job_types/hello_world_omp.c).
 
 ~~~
 #include <omp.h>
@@ -182,8 +182,8 @@ which is specified in the environment in a special variable and picked up by the
 
 ~~~
 export OMP_NUM_THREADS=3
-gcc hello_world_mp.c -o hello_world_mp -fopenmp
-./hello_world_mp
+gcc hello_world_omp.c -o hello_world_omp -fopenmp
+./hello_world_omp
 ~~~
 {: .language-bash}
 
@@ -195,6 +195,45 @@ Hello world thread number received from thread 1
 Hello world thread number received from thread 2
 ~~~
 {: .output}
+
+If we wish to submit this as a job to Slurm, we also need to write a submission script to run it that reflects this is an OpenMP job,
+so let's put the following in a file called `hw_omp.sh`:
+
+~~~
+#!/usr/bin/env bash
+#SBATCH --account=yourAccount
+#SBATCH --partition=aPartition
+#SBATCH --job-name=hello_world_omp
+#SBATCH --time=00:01:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=3
+#SBATCH --mem=50K
+
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+
+./hello_world_omp
+~~~
+{: .language-bash}
+
+So here we're requesting a single node (`--nodes=1`) running a single process (`--ntasks=1`),
+and that we'll need three CPU cores (`--cpus-per-task=3`) - each of which will run a single thread.
+
+Next, we need to set `OMP_NUM_THREADS` as before,
+but here we set it to a special Slurm environment variable (`SLURM_CPUS_PER_TASK`) that is set by Slurm to hold
+the `--cpus-per-task` we originally requested (`3`).
+We could have simply set this to three, but this method ensures that the number of threads that will run will match whatever we requested.
+So if we change this request value in the future, we only need to change it in one place.
+
+If we submit this script using `sbatch hw_omp.sh`, you should see something like the following in the Slurm output file:
+
+~~~
+Hello world thread number received from thread 0
+Hello world thread number received from thread 1
+Hello world thread number received from thread 2
+~~~
+{: .output}
+
 
 ## Multi-process via Message Passing Interface (MPI)
 
@@ -213,7 +252,7 @@ In MPI, from the outset, when an MPI-enabled program is run, we have a number of
 Each of these processes is referred to as a *rank*, and one of these ranks (typically rank zero) is a coordinating, or master, rank.
 
 So how does this look in a program?
-You can find the code below in [hello_world_mp.c](code/job_types/hello_world_mp.c).
+You can find the code below in [hello_world_mpi.c](code/job_types/hello_world_mpi.c).
 
 ~~~
 #include <stdio.h>
