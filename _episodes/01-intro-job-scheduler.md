@@ -6,9 +6,6 @@ exercises: 0
 questions:
 - "What is a job scheduler and why does a cluster need one?"
 - "What are DiRAC project allocations and how do they work?"
-- "What are job queues?"
-- "Which job queues typically exist across DiRAC and how do they differ?"
-- "How are jobs prioritised?"
 objectives:
 - "Describe briefly what a job scheduler does."
 - "Recap the fundamentals of Slurm job submission and monitoring."
