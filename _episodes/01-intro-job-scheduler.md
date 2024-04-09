@@ -97,10 +97,3 @@ Following a 3-month allocation project usage is reviewed and extended based on t
 with support provided to overcome any barriers to use.)
 In addition, Research Software Engineering (RSE) support time may also be requested,
 who can provide help with code optimisation, porting, re-factoring and performance analysis.
-
-
-## Understanding Queues
-
-FIXME: properties, accountancy/quotas, priority system, prince & pauper queues
-
-

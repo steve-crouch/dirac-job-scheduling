@@ -31,6 +31,17 @@ keypoints:
 
 ### Determining Queues to which you have Access
 
+> ## Queues: A Recap
+> 
+> The underlying mechanism which enables the scheduling of jobs across HPC systems like Slurm is that of the **queue**.
+> A queue represents a list of (to some extent) ordered jobs to be executed on HPC compute resources,
+> and sites often have many different queues which represent different aspects,
+> such as the level of prioritisation for jobs, or the capabilities of compute nodes
+> So when you submit a job, it will enter one of these queue to be executed.
+> How these queues are set up across multi-site HPC systems such as DiRAC can differ,
+> depending on local institutional infrastructure configurations, user needs, and site policies.
+{: .callout}
+
 Before we submit a job, we need to specify a queue to which it will be submitted.
 You can find out the queues you have access rights for, and their state, using:
 
