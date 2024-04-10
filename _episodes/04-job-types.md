@@ -165,17 +165,20 @@ OpenMP makes use of compiler directives to indicate which sections we wish to ru
 Compiler directives are special comments that are picked up by the C compiler and tell the compiler to behave a certain way
 with the code being compiled.
 
-In this example we use the `#pragma omp parallel` OpenMP compiler directive around a portion of the code,
-so each worker thread will run this in parallel.
-The number of threads that will run is set by the system and obtained using `omp_get_max_threads()`.
-
-We also need to be clear how variables behave in parallel sections,
-in particular to what extent they are shared between threads or private to each thread.
-Here, we indicate that the `results` array is *shared* and accessible across all threads within this parallel code portion,
-since in this case we want each worker's thread to add its thread number to our shared array.
-
-Once this parallelised section's worker threads are complete, the program resumes a serial, single-threaded behaviour
-within the master thread, and outputs the results array containing all the worker thread numbers.
+> ## How Does it Work?
+> 
+> In this example we use the `#pragma omp parallel` OpenMP compiler directive around a portion of the code,
+> so each worker thread will run this in parallel.
+> The number of threads that will run is set by the system and obtained using `omp_get_max_threads()`.
+> 
+> We also need to be clear how variables behave in parallel sections,
+> in particular to what extent they are shared between threads or private to each thread.
+> Here, we indicate that the `results` array is *shared* and accessible across all threads within this parallel code portion,
+> since in this case we want each worker's thread to add its thread number to our shared array.
+> 
+> Once this parallelised section's worker threads are complete, the program resumes a serial, single-threaded behaviour
+> within the master thread, and outputs the results array containing all the worker thread numbers.
+{: .callout}
 
 Now before we compile and test it, we need to indicate how many threads we wish to run,
 which is specified in the environment in a special variable and picked up by the program, so we'll do that first:
@@ -291,18 +294,22 @@ int main(int argc, char** argv) {
 ~~~
 {: .language-c}
 
-You'll notice that the program is a fair bit more complex,
-since here we need to explicitly coordinate the sending and receiving of messages and do some housekeeping for MPI itself.
+This program is a fair bit more complex than the OpenMP one,
+since here we need to explicitly coordinate the sending and receiving of messages and do some housekeeping for MPI itself,
+such as setting up MPI and shutting it down.
 
-After initialising MPI, in a similar vein to how we got the number of threads and threads identity,
-we obtain the number of total ranks (processses) and our rank number.
-Now in this example, for simplicity, we use a single MPI function `MPI_Gather` to simultaneously send the rank numbers
-from each separate process to the coordinating rank.
-Essentially, are sending `my_rank` (as `MPI_INT`, basically an integer) to rank `0`, which receives all responses,
-including its own, within `resultbuf`.
-Finally, if the rank is the coordinating rank, then the results are output.
-The `if (my_rank == 0)` condition is important, since without it, all ranks would attempt to print the results,
-since with MPI, typically all processes run the entire program.
+> ## How Does it Work?
+> 
+> After initialising MPI, in a similar vein to how we got the number of threads and threads identity,
+> we obtain the number of total ranks (processses) and our rank number.
+> Now in this example, for simplicity, we use a single MPI function `MPI_Gather` to simultaneously send the rank numbers
+> from each separate process to the coordinating rank.
+> Essentially, are sending `my_rank` (as `MPI_INT`, basically an integer) to rank `0`, which receives all responses,
+> including its own, within `resultbuf`.
+> Finally, if the rank is the coordinating rank, then the results are output.
+> The `if (my_rank == 0)` condition is important, since without it, all ranks would attempt to print the results,
+> since with MPI, typically all processes run the entire program.
+{: .callout}
 
 Let's compile this now. On DiRAC's COSMA, this looks like:
 
