@@ -344,7 +344,6 @@ Once Julia is loaded, we are thus able to then use `man julia` to access its man
 > ## Loading Multiple Versions of the Same Module?
 > 
 > You may ask so what if we load multiple versions of the same module?
-> For example, if you want to 
 > Depending on how your system is configured, this may be possible, e.g.
 > 
 > ~~~
