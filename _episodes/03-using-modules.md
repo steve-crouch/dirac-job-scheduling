@@ -158,10 +158,13 @@ Or alternatively, you may find it returns with `No Modulefiles Currently Loaded.
 > 
 > > ## Solution
 > > 
-> > Using `module avail -t openmpi/4.1.4` on DiRAC at time of writing, we get:
+> > Using `module avail -l openmpi/4.1.4` on COSMA at time of writing, we get:
 > >
 > > ~~~
-> >  openmpi/4.1.4                                               2022/11/28 11:11:31
+> > - Package/Alias -----------------------.- Versions --------.- Last mod. -------
+> > /cosma/local/Modules/modulefiles/mpi:
+> > openmpi/4.1.4                                               2022/11/28 11:11:31
+> > openmpi/4.1.4-romio-lustre                                  2022/09/14 10:48:34
 > > ~~~
 > > {: .output}
 >{: .solution}
@@ -342,7 +345,7 @@ Once Julia is loaded, we are thus able to then use `man julia` to access its man
 > 
 > You may ask so what if we load multiple versions of the same module?
 > For example, if you want to 
-> Depending on how your system is configured this may be possible, e.g.
+> Depending on how your system is configured, this may be possible, e.g.
 > 
 > ~~~
 > module load julia/1.9.1

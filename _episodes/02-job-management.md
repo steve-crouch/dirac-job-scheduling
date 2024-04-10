@@ -162,7 +162,7 @@ to get our desired total 8 CPUs we'd specify `--ntasks-per-node=2`.
 > > ~~~
 > > {: .language-bash}
 > > 
-> > Once submitted, using `squeue` we should the same results as before, again using a total of three nodes.
+> > Once submitted, using `squeue` we should see the same results as before, again using a total of three nodes.
 >{: .solution}
 {: .challenge}
 
@@ -581,7 +581,7 @@ with 1MB of other data written by the job's `extern` step.
 
 > ## What About other Fields?
 > 
-> We've looked at some example fields, but yhere are *many* others that you may wish to consider,
+> We've looked at some example fields, but there are *many* others that you may wish to consider,
 > which you can find in the [Slurm documentation](https://slurm.schedmd.com/sstat.html#SECTION_Job-Status-Fields).
 > 
 > Another way to get help on the field formats is to use `sstat --helpformat`,
