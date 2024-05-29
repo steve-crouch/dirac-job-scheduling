@@ -380,7 +380,7 @@ Let's create a new job to test this, that uses a single node and a single CPU on
 #SBATCH --account=yourAccount
 #SBATCH --partition=aPartition
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=1
+#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks=1
 #SBATCH --time=00:00:30
