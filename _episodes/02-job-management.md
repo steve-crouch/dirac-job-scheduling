@@ -195,7 +195,7 @@ OpenMP, you can specify how many threads it needs using this parameter.
 > When specifying resources your job will need it's important not to ask for too much.
 > Firstly, because any resources you request but don't use (e.g. CPUs, memory, GPUs) will be wasted
 > and potentially cost more in terms of your account usage, but also because requesting larger resources
-> will take longer to queue. It also means that other user's jobs that would would have been a better fit for these
+> will take longer to queue. It also means that other user's jobs that would have been a better fit for these
 > resources may also take longer to run. It's good to remember that we are part of a wider community of HPC users, and
 > as with any shared resource, we should act responsibly when using it.
 > 
