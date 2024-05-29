@@ -63,6 +63,18 @@ and the maximum time we expect the job to take when running.
 The information provided here represents a bare minimum we need to provide to run a job,
 and as we'll see, we can provide a lot more information to Slurm to support the running of many different types of jobs.
 
+> ## Username vs Account
+> 
+> It's important to note that what you specify for the `--account` parameter is not your
+> machine login username or SAFE login; it's the *project account* to which you have access.
+> Project accounts are assigned an allocation of resources (such as CPU or disk space),
+> and to use them, you specify the project account code in the `--account` parameter.
+> 
+> You can find the projects to which you have access in your DiRAC's [SAFE account](https://safe.epcc.ed.ac.uk/dirac/).
+> To see them, after you login to SAFE, select `Projects` from the top navigation bar
+> and select one of your projects to see further details, including the project's account code.
+{: .callout}
+
 If we now replace `yourAccount` and `aPartition` with suitable values,
 then save and submit that script using `sbatch basic-script.sh`,
 we have a job identifier returned which we may use to query the status
