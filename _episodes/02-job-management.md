@@ -99,7 +99,7 @@ For these parameters, by default a *task* refers to a single CPU unless otherwis
 
 - `--nodes` - the total number of machines or nodes to request
 - `--ntasks` - the total number of CPU cores (across requested nodes) your job needs. Generally, this will be 1 unless you're running MPI jobs which are
-able to use multiple CPU cores. In which case, it essentially specifies the number of MPI ranks to start across the nodes. For example, if `--nodes=4` and `--ntasks=8`, we're requesting 4 nodes each with 2 CPUs. We'll see an example of using `--ntasks` with MPI in a later episode.
+able to use multiple CPU cores. In which case, it essentially specifies the number of MPI ranks to start across the nodes. For example, if `--nodes=4` and `--ntasks=8`, we're requesting 4 nodes, with each node having 2 CPU cores, since to satisfy the requirement of a total of 8 CPU cores over 4 nodes, each node would need 2 cores. So here, Slurm does this calculation for us. We'll see an example of using `--ntasks` with MPI in a later episode.
 
 > ## Being Specific
 >
@@ -138,9 +138,10 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 >{: .solution}
 {: .challenge}
 
-We can also specify the number of CPUs to request per node explicitly using `--ntasks-per-node`. In this case, we
-use this with `--nodes` and we don't need to specify `--ntasks` at all. So using our above example with `--nodes=4`,
-to get our desired total 8 CPUs we'd specify `--ntasks-per-node=2`.
+Our example earlier with `--nodes=4` and `--ntasks=8` meant Slurm calculated that 2 cores would be needed on each of the four nodes (i.e. `ntasks/nodes = 2 cores per node`). So the number of cores needed was implicit.
+However, we can also specify the number of CPU cores per node explicitly using `--ntasks-per-node`.
+In this case, we use this with `--nodes` and we don't need to specify the total number of tasks with `--ntasks` at all.
+So using our above example with `--nodes=4`, to get our desired total 8 CPU cores we'd specify `--ntasks-per-node=2`.
 
 > ## Being Even More Specific
 >
