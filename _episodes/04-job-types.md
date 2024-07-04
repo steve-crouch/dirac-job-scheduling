@@ -396,13 +396,13 @@ which means we can use `sacct` and `squeue` to query them as a whole submission.
 Plus, we need no additional code to make it work, so it's generally a simpler way to do it.
 
 To make use of a job array approach in a Slurm we add an additional `--array` parameter to our submission script.
-So let's create a new `hw_serial_array.sh` script that uses it:
+So let's create a new `hello_job_array.sh` script that uses it:
 
 ~~~
 #!/usr/bin/env bash
 #SBATCH --account=yourAccount
 #SBATCH --partition=aPartition
-#SBATCH --job-name=hello_world_serial_array
+#SBATCH --job-name=hello_job_array
 #SBATCH --array=1-3
 #SBATCH --output=out/array_%A_%a.out
 #SBATCH --error=err/array_%A_%a.err
