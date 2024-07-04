@@ -657,3 +657,12 @@ JobID           JobName  Partition    Account  AllocCPUS      State    Elapsed  
 As with `sstat`, you can add many [other fields](https://slurm.schedmd.com/sacct.html#SECTION_Job-Accounting-Fields) too,
 although note the accounting data presented for these will be different depending on the HPC system's configuration and the job's type.
 CPUTime here is equal to `AllocCPUs * Elapsed`, i.e. the number of CPUs allocated to the job multiplied by the total elapsed time.
+
+> ## So Much to Remember!
+> 
+> Slurm has a great many commands - as well as command arguments - and it can prove difficult
+> to remember them all. It's often helpful to make a note of those you commonly use,
+> or make use of a pre-made reference/cheat sheet such as
+> [this one](https://slurm.schedmd.com/pdfs/summary.pdf) which has a comprehensive list of commands
+> and and their arguments with helpful short descriptions.
+{: .callout}
