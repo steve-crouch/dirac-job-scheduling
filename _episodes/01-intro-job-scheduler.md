@@ -5,14 +5,17 @@ teaching: 0
 exercises: 0
 questions:
 - "What is a job scheduler and why does a cluster need one?"
+- "How do I submit a Slurm job?"
 - "What are DiRAC project allocations and how do they work?"
 objectives:
 - "Describe briefly what a job scheduler does."
 - "Recap the fundamentals of Slurm job submission and monitoring."
+- "Determine the minimum parameters to use for submitting jobs."
 - "Summarise the main ways researchers may request time on a DiRAC facility."
 keypoints:
 - "A job scheduler ensures jobs are given the resources they need, and manages when and where jobs will run on an HPC resource."
-- "We use `sbatch` and `squeue` to submit jobs and query their status."
+- "Use `sinfo -s` to see information on all queues on a Slurm system."
+- "Use `sbatch` and `squeue` to submit jobs and query their status."
 - "Access to DiRAC's resources is managed through the STFC's independent Resource Allocation Committee (RAC)."
 - "Facility time may be requested through a number of mechanisms, namely in response to a Call for Proposals, the Director's Discretionary Award, and Seedcorn Time."
 - "The [DiRAC website](https://dirac.ac.uk/getting-access/) has further information on the methods to request access, as well as application forms."
@@ -45,7 +48,7 @@ You may recall from a previous course, or your own experience, two basic Slurm c
 namely `sbatch` to submit a job to an HPC resource, and `squeue` to query the state of a submitted job.
 When we submit a job, we typically write a Slurm script which embodies the commands we wish to run on a compute node.
 A job script (e.g. `basic-script.sh`) is typically written using the
-[Bash shell](https://www.gnu.org/software/bash/manual/bash.html) language and looks something like this:
+[Bash shell](https://www.gnu.org/software/bash/manual/bash.html) language and a very minimal example looks something like this (save this in a file called `basic-script.sh`, but don't try to submit it just yet!):
 
 ~~~
 #!/usr/bin/env bash
@@ -58,30 +61,87 @@ date
 {: .language-bash}
 
 The `#SBATCH` lines are special comments that provide additional information about our job to Slurm;
-for example the account and partition (which we'll look at a bit later),
-and the maximum time we expect the job to take when running.
-The information provided here represents a bare minimum we need to provide to run a job,
-and as we'll see, we can provide a lot more information to Slurm to support the running of many different types of jobs.
+for example the account and partition, and the maximum time we expect the job to take when running.
+We'll look at these and other parameters in more detail later,
+but let's focus on specifying a correct set of minimal parameters first.
 
-> ## Username vs Account
-> 
-> It's important to note that what you specify for the `--account` parameter is not your
-> machine login username or SAFE login; it's the *project account* to which you have access.
-> Project accounts are assigned an allocation of resources (such as CPU or disk space),
-> and to use them, you specify the project account code in the `--account` parameter.
-> 
-> You can find the projects to which you have access in your DiRAC's [SAFE account](https://safe.epcc.ed.ac.uk/dirac/).
-> To see them, after you login to SAFE, select `Projects` from the top navigation bar
-> and select one of your projects to see further details, including the project's account code.
-{: .callout}
+#### `--account`
 
-If we now replace `yourAccount` and `aPartition` with suitable values,
-then save and submit that script using `sbatch basic-script.sh`,
-we have a job identifier returned which we may use to query the status
-of our job until it's completed using `squeue <jobid>`.
-Once complete, we are able to read the job's log file (or files), typically held in `slurm-<jobid>.out`,
-which show us any printed output from a job,
-and depending on the HPC system, other information regarding how and where the job ran.
+It's important to note that what you specify for the `--account` parameter is not your
+machine login username or SAFE login; it's the *project account* to which you have access.
+Project accounts are assigned an allocation of resources (such as CPU or disk space),
+and to use them, you specify the project account code in the `--account` parameter.
+
+You can find the projects to which you have access in your DiRAC's [SAFE account](https://safe.epcc.ed.ac.uk/dirac/).
+To see them, after you login to SAFE, select `Projects` from the top navigation bar
+and select one of your projects to see further details, where you'll find the project's
+account code you can use.
+
+#### `--partition`
+
+The underlying mechanism which enables the scheduling of jobs across HPC systems like Slurm is that of the **queue** (or **partition**).
+A queue represents a list of (to some extent) ordered jobs to be executed on HPC compute resources,
+and sites often have many different queues which represent different aspects,
+such as the level of prioritisation for jobs, or the capabilities of compute nodes
+So when you submit a job, it will enter one of these queue to be executed.
+How these queues are set up across multi-site HPC systems such as DiRAC can differ,
+depending on local institutional infrastructure configurations, user needs, and site policies.
+
+You can find out the queues available on a DiRAC site, and their current state, using:
+
+~~~
+sinfo -s
+~~~
+{: .language-bash}
+
+The `-s` flag curtails the output to only a summary,
+whereas omitting this flag provides a full listing of nodes in each queue and their current state.
+
+You should see something like the following, although this will vary for each DiRAC resource:
+
+~~~
+PARTITION         AVAIL  TIMELIMIT   NODES(A/I/O/T) NODELIST
+cosma7               up 3-00:00:00     80/137/7/224 m[7229-7452]
+cosma7-pauper        up 1-00:00:00     80/137/7/224 m[7229-7452]
+cosma7-shm           up 3-00:00:00          0/1/0/1 mad02
+cosma7-shm-pauper    up 1-00:00:00          0/1/0/1 mad02
+cosma7-bench         up 1-00:00:00          0/0/1/1 m7452
+cosma7-rp            up 3-00:00:00     82/140/2/224 m[7001-7224]
+cosma7-rp-pauper*    up 1-00:00:00     82/140/2/224 m[7001-7224]
+~~~
+{: .output}
+
+Here we can see the general availability of each of these queues (also known as partitions), as well as the maximum
+time limit for jobs on each of these queues (in `days-hours:minutes:seconds` format).
+For example, on the `cosma7` queue there is a 3-day limit, whilst the `cosma7-pauper` queue has a 1-day limit. The `*` beside the partition name indicates it is the default queue (although it's always
+good practice to specify this explicitly). Note that the queues to which you have access will depend on your allocation setup, and this may not include the default queue (for example, if you only have access to GPU resources which are accessible on their own queue, like on Tursa, you'll need to use one of these queues instead).
+
+#### Other Parameters
+
+Depending on your site and how your allocation is configured you may need to specify other parameters in your script.
+On Tursa for example, you may need to specify a `--qos` parameter in the script which stands for quality of service, which is used to constrain or modify the characteristics of a job.
+So for example on Tursa, you may need to add a line containing `#SBATCH --qos=standard` (e.g. below the other `#SBATCH` directives).
+
+> ## Submitting a Job!
+> 
+> Let's check that we can first submit a job to Slurm so we can verify that we have a working set of
+> Slurm parameters. As mentioned, these will vary depending on your circumstances, such as the projects
+> to which you have access to on DiRAC, and the DiRAC site to which you are submitting jobs.
+> 
+> Once you've determined these, edit `basic-script.sh` (as shown above),
+> substitute the correct `--account` and `--partition` values
+> and add any additional parameters needed for your site (e.g. `--qos`), and then save the file.
+> Next, submit that script using `sbatch basic-script.sh`.
+> It may take some trial and error to find the correct parameters!
+> Once you've successfully submitted the job, you should have a job identifier returned in the terminal
+> (something like `309001`).
+> 
+> Lastly, you can use that job identifier to query the status
+> of our job until it's completed using `squeue <jobid>` (e.g. `squeue 309001`).
+> Once the job is complete, we are able to read the job's log file (or files), typically held in a file named
+> `slurm-<jobid>.out`, which show us any printed output from a job,
+> and depending on the HPC system, other information regarding how and where the job ran.
+{: .challenge}
 
 
 ## DiRAC Project Allocations

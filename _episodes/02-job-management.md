@@ -9,15 +9,13 @@ questions:
 - "What can I do to specify how my job will run?"
 - "How can I find out the status of my running or completed jobs?"
 objectives:
-- "Determine queues to which you have access."
 - "Specify a job's resource requirements in a Slurm batch script."
-- "Describe the main states a job passess through from start to completion."
+- "Describe the main states a job passes through from start to completion."
 - "Describe the major ways a job may fail and how that's presented."
 - "Cancel multiple jobs using a single command."
 - "Describe how backfilling works and why it's useful."
-- "Obtain greater detail regarding the status of a jobs and its use of resources."
+- "Obtain greater detail regarding the status of a completed job and its use of resources."
 keypoints:
-- "Use `sinfo -s` to see information on all queues to which you have access."
 - "Use `--nodes` and `--ntasks` in a Slurm batch script to request the total number of machines and CPU cores you'd like for your job."
 - "A typical job passes through pending, running, completing, and completed job states."
 - "Reasons for a job's failure include being out of memory, being suspended, cancelled, or exiting with a non-zero exit code."
@@ -27,53 +25,27 @@ keypoints:
 - "Use `sacct` to query the resource accounting information for a completed job."
 ---
 
+We've recapped the fundamentals of how we are able to use Slurm to submit a simple job and monitor it to completion,
+but in practice we'll need more flexibility in specifying what resources we need for our jobs,
+how they should run, and how we manage them, so let's look at that in more detail now.
+
 ## Selecting Resources for Jobs
 
-### Determining Queues to which you have Access
+### Selecting Available Resources
 
-> ## Queues: A Recap
-> 
-> The underlying mechanism which enables the scheduling of jobs across HPC systems like Slurm is that of the **queue**.
-> A queue represents a list of (to some extent) ordered jobs to be executed on HPC compute resources,
-> and sites often have many different queues which represent different aspects,
-> such as the level of prioritisation for jobs, or the capabilities of compute nodes
-> So when you submit a job, it will enter one of these queue to be executed.
-> How these queues are set up across multi-site HPC systems such as DiRAC can differ,
-> depending on local institutional infrastructure configurations, user needs, and site policies.
-{: .callout}
-
-Before we submit a job, we need to specify a queue to which it will be submitted.
-You can find out the queues you have access rights for, and their state, using:
+We saw earlier how to use `sinfo -s` as a means to obtain a list of queues we are able to access,
+but there's also some additional useful information.
+Of particular interest is the `NODES` column, which gives us an overview of the state of these resources, and hence
+allows us to select a queue with those resources that are sufficiently available for jobs we'd like to submit. For example, on Tursa you may see something like:
 
 ~~~
-sinfo -s
-~~~
-{: .language-bash}
-
-The `-s` curtails the output to only a summary,
-whereas using this flag provides a full listing of nodes in each queue and their current state.
-
-You should see something like the following, although this will vary for each DiRAC resource:
-
-~~~
-PARTITION         AVAIL  TIMELIMIT   NODES(A/I/O/T) NODELIST
-cosma7               up 3-00:00:00     80/137/7/224 m[7229-7452]
-cosma7-pauper        up 1-00:00:00     80/137/7/224 m[7229-7452]
-cosma7-shm           up 3-00:00:00          0/1/0/1 mad02
-cosma7-shm-pauper    up 1-00:00:00          0/1/0/1 mad02
-cosma7-bench         up 1-00:00:00          0/0/1/1 m7452
-cosma7-rp            up 3-00:00:00     82/140/2/224 m[7001-7224]
-cosma7-rp-pauper*    up 1-00:00:00     82/140/2/224 m[7001-7224]
+PARTITION AVAIL  TIMELIMIT   NODES(A/I/O/T) NODELIST
+slurm*       up 4-00:00:00      198/0/0/198 dnode[001-198]
+devel        up    2:00:00      198/2/0/200 dnode[001-200]
 ~~~
 {: .output}
 
-Here we can see the general availability of each of these queues (also known as partitions), as well as the maximum
-time limit for jobs on each of these queues (in `days-hours:minutes:seconds` format).
-For example, on the `cosma7` queue there is a 3-day limit, whilst the `cosma7-pauper` queue has a 1-day limit.
-
-Of particular interest is the `NODES` column, which gives us an overview of the state of these resources, and hence
-allows us to select those resources that are sufficiently available for jobs we'd like to submit.
-It indicates how many nodes are:
+Looking at the `NODES` column, it indicates how many nodes are:
 
 - `A`ctive - these are running jobs
 - `I`dle - no jobs are running
@@ -81,6 +53,9 @@ It indicates how many nodes are:
 - The `T`otal number of nodes
 
 The `NODELIST` is a summary of those nodes in a particular queue.
+
+In this particular instance, we can see that 2 nodes are idle in the `devel` queue,
+so if that queue fits our needs (and we have access to it) we may decide to submit to that.
 
 ### Specifying Job Resource Requirements
 
@@ -316,14 +291,14 @@ squeue -u yourUsername
 ### Backfilling
 
 When developing code or testing configurations it is usually the case that you don’t need a lot of time.
-When that is true and the queues are busy backfilling can be really useful.
+When that is true and the queues are busy, backfilling is a scheduling feature that proves really useful.
 
 If there are idle nodes then that means they are available to run jobs, or that they are being kept so that a
 job can run in the future. The time between when a job needs those nodes and now is the backfill window
-and jobs that need less than that time will be scheduled to run. To take best advantage of backfilling, 
-specify a shorter time period for jobs.
+and jobs that need less than that time may be scheduled to run on those resources. To take best advantage of backfilling, 
+specify a shorter time period for jobs so they can fill these windows.
 
-You can check if a particular Slurm scheduler is configured to use a backfill technique by doing the following:
+You can check if a particular Slurm scheduler is configured to use the backfill technique (which is the default) by doing the following:
 
 ~~~
 scontrol show config | grep SchedulerType
@@ -492,7 +467,7 @@ First, submit our previous job script `specific-job.sh` using `sbatch`,
 then check when it's actually running using `squeue` (since `sstat` will only work on actively running jobs),
 and then when we know it's running we can use `sstat` to query which resources it's using.
 Note that it's probably a good idea to increase the `25` value for `sleep` in the job script
-so you have more time to query the job before it completes!
+(along with the `#SBATCH --time` parameter) so you have more time to query the job before it completes!
 
 For example, following submission via `sbatch`:
 
@@ -541,48 +516,62 @@ JobID            AveCPU   NTasks     MinCPU MaxDiskWrite
 ~~~
 {: .output}
 
-To see information about the job we need to add a flag to the command:
+This is because, by default, all jobs are actually made up of a number of job *steps*,
+and batch scripts running by themselves aren't accounted for.
+
+A job that consists of only a batch script, like this one, typically only has two steps:
+ - *batch step*, which is created for all jobs submitted with `sbatch`
+ - *extern* step, which accounts for resources used by a job outside of aspects managed by Slurm
+(which includes special cases such as SSH-ing into the compute node, which may be allowed on some systems
+and would be accounted here)
+
+A job may also have additional steps,
+for example with MPI jobs there will be extra processes launched which are accounted for as separate steps,
+and will be listed separately.
+In our case, all processing is accounted for in the `batch` step, so we need to query that directly,
+since by default, `sstat` doesn't include this.
+We can reference the batch step directly using:
+
+~~~
+sstat -j 6803898.batch --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
+~~~
+{: .language-bash}
+
+And now we should see something like the following (you may need to submit it again):
+
+~~~
+JobID            AveCPU   NTasks     MinCPU MaxDiskWrite
+------------ ---------- -------- ---------- ------------
+6803898.batch  00:00:00        1   00:00:00           66
+~~~
+{: .output}
+
+In this trivial case, so far we can see that we've used virtually no actual CPU,
+and the batch submission script has written a total of 66 bytes.
+
+There's also the `--allsteps` flag to see a summary of all
+steps, although note that this isn't always supported on all Slurm systems:
 
 ~~~
 sstat --allsteps -j 6803898 --format=JobID,AveCPU,NTasks,MinCPU,MaxDiskWrite
 ~~~
 {: .language-bash}
 
-> ## Anatomy of a Job
-> 
-> So Why Use `--allsteps`?
-> This is because, by default, all jobs are actually made up of a number of job *steps*.
-> A job that consists of only a batch script, like this one, typically only has two steps:
-> a *batch step*, which is created for all jobs submitted with `sbatch`,
-> and an *extern* step, which accounts for resources used by a job outside of aspects managed by Slurm
-> (which includes special cases such as SSH-ing into the compute node, which may be allowed on some systems
-> and would be accounted here).
-> A job may also have additional steps,
-> for example with MPI jobs there will be extra processes launched which are accounted for as separate steps,
-> and will be listed separately.
-> In our case, all processing is accounted for in the `batch` step, so we need to query that directly,
-> since by default, `sstat` doesn't include this.
-{: .callout}
-
-And now we should see something like:
+So in our batch case, we'd see two steps:
 
 ~~~
-JobID            AveCPU   NTasks     MinCPU MaxDiskWrite
------------- ---------- -------- ---------- ------------
-6803898.ext+   00:00:00        1   00:00:00        1.00M
-6803898.bat+   00:00:00        1   00:00:00           66
+JobID             AveCPU   NTasks     MinCPU MaxDiskWrite 
+------------- ---------- -------- ---------- ------------ 
+6803898.exte+   00:00:00        1   00:00:00        1.00M 
+6803898.batch   00:00:00        1   00:00:00           66
 ~~~
 {: .output}
 
-The `+` indicates the column value is truncated; in this case `ext` refers to `extern`, and `bat` refers to `batch`.
 
-In this trivial case, so far we can see that we've used virtually no actual CPU,
-and the batch submission script has written a total of 66 bytes,
-with 1MB of other data written by the job's `extern` step.
-
-> ## What About other Fields?
+> ## What About other Format Fields?
 > 
-> We've looked at some example fields, but there are *many* others that you may wish to consider,
+> We've looked at some example fields to include in the output format,
+> but there are *many* others that you may wish to consider,
 > which you can find in the [Slurm documentation](https://slurm.schedmd.com/sstat.html#SECTION_Job-Status-Fields).
 > 
 > Another way to get help on the field formats is to use `sstat --helpformat`,
