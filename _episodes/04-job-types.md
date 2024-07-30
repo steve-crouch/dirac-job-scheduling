@@ -404,7 +404,7 @@ So let's create a new `hello_job_array.sh` script that uses it:
 #SBATCH --partition=aPartition
 #SBATCH --job-name=hello_job_array
 #SBATCH --array=1-3
-#SBATCH --output=out/array_%A_%a.out
+#SBATCH --output=output/array_%A_%a.out
 #SBATCH --error=err/array_%A_%a.err
 #SBATCH --time=00:01:00
 #SBATCH --nodes=1
@@ -412,17 +412,17 @@ So let's create a new `hello_job_array.sh` script that uses it:
 #SBATCH --mem=1M
 
 echo "Task $SLURM_ARRAY_TASK_ID"
-grep input/input_file_$SLURM_ARRAY_TASK_ID.txt hello
+grep hello input/input_file_$SLURM_ARRAY_TASK_ID.txt
 sleep 30
 ~~~
 {: .language-bash}
 
 We've introduced a few new things in this script:
 - `#SBATCH --array=1-3` - this job will create three array _tasks_, with task identifiers `1`, `2`, and `3`.
-- `#SBATCH --output=out/array_%A_%a.out` - this explicitly specifies what we want our output file to be called and where it should be located, and will collect any output printed to the console from the job. `%A` will be replaced with the overall job submission id, and `%a` will be replaced by the array task id. So, assuming a job id of 123456, the first array task will have an output file called `array_123456_1.out` which will be stored in the `out` directory. Naming the output files in this way separates them by job id as well as array task id.
+- `#SBATCH --output=output/array_%A_%a.out` - this explicitly specifies what we want our output file to be called and where it should be located, and will collect any output printed to the console from the job. `%A` will be replaced with the overall job submission id, and `%a` will be replaced by the array task id. So, assuming a job id of 123456, the first array task will have an output file called `array_123456_1.out` which will be stored in the `output` directory. Naming the output files in this way separates them by job id as well as array task id.
 - `#SBATCH --error=err/array_%A_%a.err` - similarly to `--output=`, this will store any error output for this array task (i.e. messages output to the standard error), in the specified error file in the `err` directory.
 - `$SLURM_ARRAY_TASK_ID` is a shell environment variable that holds the number of the individual array task running.
-- `grep input/input_file_$SLURM_ARRAY_TASK_ID.txt` here we use the `grep` command to search an input file with the filename `input_file_$SLURM_ARRAY_TASK_ID.txt` in the `input` directory, where `$SLURM_ARRAY_TASK_ID` will be replaced with the array id. So for the first array task, the input file will be called `input_file_1.txt`. We've used `grep` as an example command, but this technique can be applied to any program that accepts inputs in this way.
+- `grep hello input/input_file_$SLURM_ARRAY_TASK_ID.txt` here we use the `grep` command to search for the word "hello" withan input file with the filename `input_file_$SLURM_ARRAY_TASK_ID.txt` in the `input` directory, where `$SLURM_ARRAY_TASK_ID` will be replaced with the array id. For example, for the first array task, the input file will be called `input_file_1.txt`. We've used `grep` as an example command, but this technique can be applied to any program that accepts inputs in this way.
 
 Given the jobs are trivial and finish very quickly,
 we've added a `sleep 30` command at the end so each task takes an additional 30 seconds to run,
@@ -432,16 +432,17 @@ Before we submit this job, we need to prepare some input and output directories 
 
 ~~~
 mkdir input
-mkdir out
+mkdir output
+mkdir err
 ~~~
 {: .language-bash}
 
 In the `input` directory, make some text files with the filenames `input_file_1.txt`, `input_file_2.txt`, and `input_file_3.txt` with some text that somewhere includes `hello` in it, e.g.
 
 ~~~
-echo "Hello there my friend" > input/input_file_1.txt
-echo "Hello world" > input/input_file_2.txt
-echo "Well hello, can you hear me?" > input/input_file_3.txt
+echo "hello there my friend" > input/input_file_1.txt
+echo "hello world" > input/input_file_2.txt
+echo "well hello, can you hear me?" > input/input_file_3.txt
 ~~~
 {: .language-bash}
 
@@ -464,7 +465,7 @@ a single entry but with `[1-3]` in the `JOBID` indicating the three subtasks as 
 {: .output}
 
 Once complete, we'll find three separate job output log files: `6803105_1`, `6803105_2`, and `6803105_3`,
-each corresponding to a specific task.
+each corresponding to a specific task in the `output` directory.
 For example for `6803105_1`, depending on our HPC resource we will see something like:
 
 ~~~
