@@ -459,7 +459,7 @@ a single entry but with `[1-3]` in the `JOBID` indicating the three subtasks as 
 
 ~~~
              JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-     6803105_[1-3] cosma7-pa hello_wo yourUser PD       0:00      1 (Priority)
+     6803105_[1-3] cosma7-pa hello_jo yourUser PD       0:00      1 (Priority)
 ~~~
 {: .output}
 
