@@ -5,16 +5,19 @@ teaching: 0
 exercises: 0
 questions:
 - "What is a job scheduler and why does a cluster need one?"
+- "How do I find out what parameters to use for my Slurm job?"
 - "How do I submit a Slurm job?"
 - "What are DiRAC project allocations and how do they work?"
 objectives:
 - "Describe briefly what a job scheduler does."
 - "Recap the fundamentals of Slurm job submission and monitoring."
-- "Determine the minimum parameters to use for submitting jobs."
+- "Use Slurm and SAFE to determine the submission parameters to use to submit a job."
 - "Summarise the main ways researchers may request time on a DiRAC facility."
 keypoints:
 - "A job scheduler ensures jobs are given the resources they need, and manages when and where jobs will run on an HPC resource."
+- "Obtain your DiRAC account details to use for job submission from DiRAC's SAFE website."
 - "Use `sinfo -s` to see information on all queues on a Slurm system."
+- "Use `scontrol show partition` to see more detail on particular queues."
 - "Use `sbatch` and `squeue` to submit jobs and query their status."
 - "Access to DiRAC's resources is managed through the STFC's independent Resource Allocation Committee (RAC)."
 - "Facility time may be requested through a number of mechanisms, namely in response to a Call for Proposals, the Director's Discretionary Award, and Seedcorn Time."
@@ -114,13 +117,69 @@ cosma7-rp-pauper*    up 1-00:00:00     82/140/2/224 m[7001-7224]
 Here we can see the general availability of each of these queues (also known as partitions), as well as the maximum
 time limit for jobs on each of these queues (in `days-hours:minutes:seconds` format).
 For example, on the `cosma7` queue there is a 3-day limit, whilst the `cosma7-pauper` queue has a 1-day limit. The `*` beside the partition name indicates it is the default queue (although it's always
-good practice to specify this explicitly). Note that the queues to which you have access will depend on your allocation setup, and this may not include the default queue (for example, if you only have access to GPU resources which are accessible on their own queue, like on Tursa, you'll need to use one of these queues instead).
+good practice to specify this explicitly).
+
+Note that the queues to which you have access will depend on your allocation setup, and this may not include the default queue (for example, if you only have access to GPU resources which are accessible on their own queue, like on Tursa, you'll need to use one of these queues instead).
+
+To find out more information on queues, you can use the `scontrol show` command, which allows you to view the configuration of Slurm and it's current state.
+So to see a breakdown of a particular queue, you can do (replacing `<partition_name>`):
+
+~~~
+scontrol show partition=<partition_name>
+~~~
+{: .language-bash}
+
+So on COSMA, for example:
+
+~~~
+scontrol show partition=cosma7
+~~~
+{: .language-bash}
+
+~~~
+PartitionName=cosma7
+   AllowGroups=cosma7 AllowAccounts=do009,dp004,dp012,dp050,dp058,dp060,dp092,dp121,dp128,dp203,dp260,dp276,dp278,dp314,ds007 AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=3-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED
+   Nodes=m[7229-7449]
+   ...
+~~~
+{: .output}
+
+In particular, we can see the accounts (under `AllowAccounts`) that have access to this queue
+(which may display `ALL` depending on the queue and the system).
+
+To see a complete breakdown of all queues you can use:
+
+~~~
+scontrol show partitions
+~~~
+{: .language-bash}
 
 #### Other Parameters
 
 Depending on your site and how your allocation is configured you may need to specify other parameters in your script.
 On Tursa for example, you may need to specify a `--qos` parameter in the script which stands for quality of service, which is used to constrain or modify the characteristics of a job.
-So for example on Tursa, you may need to add a line containing `#SBATCH --qos=standard` (e.g. below the other `#SBATCH` directives).
+
+So for example on Tursa, we can use `scontrol show` to display the allowed QoS' for a particular queue, e.g.:
+
+~~~
+scontrol show partition=cpu
+~~~
+{: .language-bash}
+
+~~~
+PartitionName=cpu
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=sysadm,standard,high,short,debug,low,reservation
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=01:00:00 DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=2-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED
+   Nodes=tu-c0r0n[66-71]
+~~~
+{: .output}
+
+We can see under `AllowQos` those that are permitted. So for example using the `cpu` queue on Tursa, in the batch script you may need to add a line containing `#SBATCH --qos=standard` (e.g. below the other `#SBATCH` directives) for it to work.
 
 > ## Submitting a Job!
 > 
