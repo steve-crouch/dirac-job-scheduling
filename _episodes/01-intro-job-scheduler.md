@@ -57,6 +57,7 @@ A job script (e.g. `basic-script.sh`) is typically written using the
 #!/usr/bin/env bash
 #SBATCH --account=yourAccount
 #SBATCH --partition=aPartition
+#SBATCH --nodes=1
 #SBATCH --time=00:00:30
 
 date
@@ -64,8 +65,9 @@ date
 {: .language-bash}
 
 The `#SBATCH` lines are special comments that provide additional information about our job to Slurm;
-for example the account and partition, and the maximum time we expect the job to take when running.
-We'll look at these and other parameters in more detail later,
+for example the account and partition, the maximum time we expect the job to take when running,
+and the number of nodes we'd like to request (in this case, just one).
+We'll look at other parameters in more detail later,
 but let's focus on specifying a correct set of minimal parameters first.
 
 #### `--account`
@@ -100,7 +102,7 @@ sinfo -s
 The `-s` flag curtails the output to only a summary,
 whereas omitting this flag provides a full listing of nodes in each queue and their current state.
 
-You should see something like the following, although this will vary for each DiRAC resource:
+You should see something like the following. This is an example from COSMA:
 
 ~~~
 PARTITION         AVAIL  TIMELIMIT   NODES(A/I/O/T) NODELIST
@@ -119,6 +121,15 @@ time limit for jobs on each of these queues (in `days-hours:minutes:seconds` for
 For example, on the `cosma7` queue there is a 3-day limit, whilst the `cosma7-pauper` queue has a 1-day limit. The `*` beside the partition name indicates it is the default queue (although it's always
 good practice to specify this explicitly).
 
+> ## Queues on Other Sites
+> 
+> On other DiRAC sites, the queues displayed with `sinfo` will look different, for example:
+>
+> - Edinburgh's Tursa: there are `cpu` and `gpu` queues, as well as other gpu-specific queues.
+> - Cambridge's CSD: there are a number of queues for different CPU and GPU architectures, such as `cclake`, `icelake`, `sapphire`, and `ampere`.
+> - Leicester's DiAL3: there are two queues named `slurm` and `devel`, with `slurm` referring to the main HPC resource and `devel` for development or testing use (i.e. short running jobs).
+{: .callout}
+
 Note that the queues to which you have access will depend on your allocation setup, and this may not include the default queue (for example, if you only have access to GPU resources which are accessible on their own queue, like on Tursa, you'll need to use one of these queues instead).
 
 To find out more information on queues, you can use the `scontrol show` command, which allows you to view the configuration of Slurm and it's current state.
@@ -135,6 +146,8 @@ So on COSMA, for example:
 scontrol show partition=cosma7
 ~~~
 {: .language-bash}
+
+An example of the output, truncated for clarity:
 
 ~~~
 PartitionName=cosma7
@@ -161,8 +174,9 @@ scontrol show partitions
 
 Depending on your site and how your allocation is configured you may need to specify other parameters in your script.
 On Tursa for example, you may need to specify a `--qos` parameter in the script which stands for quality of service, which is used to constrain or modify the characteristics of a job.
+On other sites, a default `--qos` is already present and doesn't need to be explicitly supplied.
 
-So for example on Tursa, we can use `scontrol show` to display the allowed QoS' for a particular queue, e.g.:
+So for example on Tursa, we can use `scontrol show partition` to display the allowed QoS' for a particular queue, e.g.:
 
 ~~~
 scontrol show partition=cpu
@@ -176,10 +190,11 @@ PartitionName=cpu
    DefaultTime=01:00:00 DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO
    MaxNodes=UNLIMITED MaxTime=2-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED
    Nodes=tu-c0r0n[66-71]
+   ...
 ~~~
 {: .output}
 
-We can see under `AllowQos` those that are permitted. So for example using the `cpu` queue on Tursa, in the batch script you may need to add a line containing `#SBATCH --qos=standard` (e.g. below the other `#SBATCH` directives) for it to work.
+We can see under `AllowQos` those that are permitted. So for example using the `cpu` queue on Tursa, in the batch script you may need to add a line containing `#SBATCH --qos=standard` (e.g. below the other `#SBATCH` directives) for jobs to work - make a note of this!
 
 > ## Submitting a Job!
 > 
@@ -197,9 +212,9 @@ We can see under `AllowQos` those that are permitted. So for example using the `
 > 
 > Lastly, you can use that job identifier to query the status
 > of our job until it's completed using `squeue <jobid>` (e.g. `squeue 309001`).
-> Once the job is complete, we are able to read the job's log file (or files), typically held in a file named
+> Once the job is complete, we are able to read the job's log file, typically held in a file named
 > `slurm-<jobid>.out`, which show us any printed output from a job,
-> and depending on the HPC system, other information regarding how and where the job ran.
+> and depending on the HPC system, perhaps other information regarding how and where the job ran.
 {: .challenge}
 
 
