@@ -311,10 +311,47 @@ such as setting up MPI and shutting it down.
 > since with MPI, typically all processes run the entire program.
 {: .callout}
 
-Let's compile this now. On DiRAC's COSMA, this looks like:
+Let's compile this now. First, we may need to load some module to provide us with the correct compiler and an implementation of MPI, so we can compile our MPI code.
+
+On DiRAC's COSMA, this looks like:
+
+~~~
+module load gnu_comp
+module load openmpi
+~~~
+{: .language-bash}
+
+We can also load specific versions if we wish:
 
 ~~~
 module load gnu_comp/13.1.0
+module load openmpi/4.1.4
+~~~
+{: .language-bash}
+
+Note that on many sites there are often a number of compiler and MPI implementation options,
+but for the purposes of this training we'll use `openmpi` with a readily available C compiler
+(or what is provided by the system by default).
+
+> ## Other DiRAC Sites?
+>
+> On Cambridge's CSD3 and Edinburgh's Tursa:
+> ~~~
+> module load openmpi
+> ~~~
+> {: .language-bash}
+>
+> On Leicester's DiAL3 we need to do something more specific, such as:
+> ~~~
+> module load gcc/10.3.0/picedk
+> module load openmpi/4.1.6/ol2kfe
+> ~~~
+> {: .language-bash}
+{: .callout}
+
+Once we've loaded these modules we can compile this code:
+
+~~~
 mpicc hello_world_mpi.c -o hello_world_mpi
 ~~~
 {: .language-bash}
@@ -335,21 +372,21 @@ Let's create a new submission script named `hw_mpi.sh` that executes this MPI jo
 #SBATCH --ntasks=3
 #SBATCH --mem=1M
 
-module load gnu_comp/11.1.0
-module load openmpi/4.1.4
+module load openmpi
 
-mpiexec ./hello_world_mpi
+mpiexec -n ${SLURM_NTASKS} ./hello_world_mpi
 ~~~
 {: .language-c}
 
-On this particular HPC setup on DiRAC's COSMA, we need to load both a suitable compiler as well as the OpenMPI module
-so we can run MPI jobs; your system may differ!
+On this particular HPC setup on DiRAC's COSMA, we need to load the OpenMPI module so we can run MPI jobs.
+For your particular site, substitute the MPI `module load` command you used previously.
 
 Note also that we specify `3` to `--ntasks` this time to reflect the number of processes we wish to run.
 
 You'll also see that with MPI programs we use `mpiexec` to run them,
-and instead of specifying the number of parallel processes in an environment variable,
-`mpiexec` will use the number of processes available to the job; in this case 3.
+and specifically state the number of MPI processes we specified in `--ntasks`
+by using the Slurm environment variable `SLURM_NTASKS`,
+so `mpiexec` will use 3 processes in this case.
 
 > ## Efficient use of Resources
 > 
@@ -361,7 +398,7 @@ and instead of specifying the number of parallel processes in an environment var
 > so the fact this has happened may not be obvious.
 {: .callout}
 
-In the Slurm output file You should see:
+In the Slurm output file You should see something like:
 
 ~~~
 Hello world rank number received from rank 0
@@ -469,10 +506,6 @@ each corresponding to a specific task in the `output` directory.
 For example for `6803105_1`, depending on our HPC resource we will see something like:
 
 ~~~
-====
-Starting job 6803508 at Mon 19 Feb 19:39:46 GMT 2024 for user yourUsername.
-Running on nodes: m7315
-====
 Task 1
 Hello world!
 ~~~

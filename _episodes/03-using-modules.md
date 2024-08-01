@@ -13,6 +13,7 @@ objectives:
 keypoints:
 - "HPC systems use a module loading/unloading system to provide access to software."
 - "To see the available modules on a system, we use `module avail`."
+- "The software installed across the DiRAC sites can be different in terms of what's installed and the versions that are available."
 - "`module list` will show us which modules we currently have loaded."
 - "We use `module load` and `module unload` to grant and remove access to modules on the system."
 - "We should only keep loaded those modules we actively wish to use, and try to avoid loading multiple versions of the same software."
@@ -70,12 +71,14 @@ you are using.
 
 ### Listing Available Modules
 
-To see available software modules, use `module avail`:
+To see available software modules, use `module avail`.
 
 ~~~
 module avail
 ~~~
 {: .language-bash}
+
+On COSMA, it looks something like the following, although your site output will differ:
 
 ~~~
 --------------------- /cosma/local/Modules/modulefiles/mpi ---------------------
@@ -117,7 +120,39 @@ aocc/2.2.0                intel_comp/2019-update4
 > > ~~~
 > > {: .output}
 > > 
-> > So, a total of 9 module versions of `openmpi`.
+> > So, a total of 9 module versions of `openmpi`. On Tursa:
+> >
+> > ~~~
+> > --------------------------------------- /home/y07/shared/tursa-modules ---------------------------------------
+> > openmpi/4.1.5
+> > ------------------------------ /mnt/lustre/tursafs1/apps/cuda-12.3-modulefiles -------------------------------
+> > openmpi/4.1.5-cuda12.3  
+> > 
+> > ----------------------------- /mnt/lustre/tursafs1/apps/cuda-11.4.1-modulefiles ------------------------------
+> > openmpi/4.1.1-cuda11.4.1  
+> > 
+> > ----------------------------------- /mnt/lustre/tursafs1/apps/modulefiles ------------------------------------
+> > openmpi/4.0.4  openmpi/4.1.1 
+> > ~~~
+> > {: .output}
+> > 
+> > On DiAL3:
+> > ~~~
+> > ------------------------------------------- /cm/shared/modulefiles -------------------------------------------
+> >    openmpi4/intel/4.0.5
+> > ~~~
+> > {: .output}
+> > 
+> > And on CSD3, we have something like:
+> > ~~~
+> > -------------------------------------- /usr/local/software/modulefiles ---------------------------------------
+> > openmpi/3.1.4-gcc-7.2.0  
+> > 
+> > ----------------------------------- /usr/local/Cluster-Config/modulefiles ------------------------------------
+> > openmpi-GDR/gnu/1.10.7_cuda-8.0  openmpi/gcc/9.2/4.0.1  openmpi/gcc/9.3/4.0.4  
+> > openmpi-GDR/gnu/2.1.1_cuda-8.0   openmpi/gcc/9.2/4.0.2  openmpi/pgi/3.0.0     
+> > ~~~
+> > {: .output}
 >{: .solution}
 {: .challenge}
 
@@ -142,7 +177,7 @@ Currently Loaded Modulefiles:
 ~~~
 {: .output}
 
-Or alternatively, you may find it returns with `No Modulefiles Currently Loaded.`
+Depending on your site, you may find it returns with much a shorter list, or perhaps `No Modulefiles Currently Loaded.`
 
 > ## More or Less Information?
 > 
@@ -158,13 +193,22 @@ Or alternatively, you may find it returns with `No Modulefiles Currently Loaded.
 > 
 > > ## Solution
 > > 
-> > Using `module avail -l openmpi/4.1.4` on COSMA at time of writing, we get:
+> > For example, using `module avail -l openmpi/4.1.4` on COSMA at time of writing, we get:
 > >
 > > ~~~
 > > - Package/Alias -----------------------.- Versions --------.- Last mod. -------
 > > /cosma/local/Modules/modulefiles/mpi:
 > > openmpi/4.1.4                                               2022/11/28 11:11:31
 > > openmpi/4.1.4-romio-lustre                                  2022/09/14 10:48:34
+> > ~~~
+> > {: .output}
+> >
+> > Using `module avail -l openmpi/pgi/3.0.0` on CSD3, we get:
+> >
+> > ~~~
+> > - Package/Alias -----------------------.- Versions --------.- Last mod. -------
+> > /usr/local/Cluster-Config/modulefiles:
+> > openmpi/pgi/3.0.0                                           2018/05/17 14:25:11
 > > ~~~
 > > {: .output}
 >{: .solution}
@@ -178,54 +222,69 @@ we *load* or *unload* them.
 ### Loading Software
 
 To load a software module, we use `module load`.
-In this example we will use Julia, which a high-level language designed for parallelism commonly used for numerical
-analysis and computational science.
-We won't use or investigate the language in any detail, but merely use it to demonstrate the use of modules.
 
-Initially, Julia is not loaded. We can test this by using the `which`
+Whilst the DiRAC sites have some modules in common,
+there are many differences in what software modules are available and not all modules are available
+on all sites.
+So in this example, for simplicity whilst investigating module loading,
+we'll load a different module depending on your site (so make a note of it!):
+
+- Durham COSMA: `julia`
+- Edinburgh Tursa: `cmake`
+- Leicester DiAL3: `ffmpeg`
+- Cambridge CSD3: `bison`
+
+We won't use or investigate any of the packages in any detail, but merely use them to demonstrate the use of modules.
+They're handy for training purposes, since the module names equate to the commands used to run them.
+Note that some of these commands are actually available on multiple sites across DiRAC.
+
+Initially, our module is not loaded. We can test this by using the `which`
 command.
 `which` looks for programs the same way that Bash does, so we can use
 it to tell us where a particular piece of software is stored.
+So on DiAL3, we could do the following:
 
 ~~~
-which julia
+which ffmpeg
 ~~~
 {: .language-bash}
 
-You'll likely get something like the following, complaining that it can't find the `julia` command within our
+On your own site, substitute `ffmpeg` with the module above for your site.
+
+You'll likely get something like the following, complaining that it can't find the command within our
 environment:
 
 ~~~
-/usr/bin/which: no julia in (/cosma/local/matlab/R2020b/bin:/cosma/local/gadgetviewer/1.1.4/bin:/cosma/local/hdfview/HDFView/3.1.4/bin:/cosma/local/arm/forge/22.0.2/bin:/cosma/local/Python/2.7.15/bin:/cosma/local/bin:/usr/lib64/qt-3.3/bin:/cosma/local/Modules/default/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin)
+/usr/bin/which: no ffmpeg in (/cm/local/apps/lua/5.4.0/bin:/home/dc-crou1/.local/bin:/home/dc-crou1/bin:/cm/shared/apps/hwloc/1.11.11/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin)
 ~~~
 {: .output}
 
-So we can now try to load the Julia module with `module load`:
+So we can now try to load our module with `module load`,
+so for DiAL3, for example:
 
 ~~~
-module load julia
-which julia
+module load ffmpeg
+which ffmpeg
 ~~~
 {: .language-bash}
 
-> ## Why Not Specify the Version of Julia?
+Which now shows us, in the case of DiAL3 and `ffmpeg`:
+
+~~~
+/cm/shared/apps/ffmpeg/5.0.1/bin/ffmpeg
+~~~
+{: .output}
+
+> ## Why Not Specify the Version of the Module?
 > 
-> Note here we aren't specifying the precise version of Julia that we want for simplicity here,
-> particularly since differing HPC systems aren't guaranteed to support a particular example version.
-> However, feel free to use `module avail julia` to determine the versions available on your HPC system
+> Note here we aren't specifying the precise version of the module that we want for simplicity here.
+> However, feel free to use `module avail <module_name>` to determine the versions available on your HPC system
 > and then load a specific version if you wish, e.g. `module load julia/1.9.1`
 > 
 > At some point or other, you will run into issues where only one particular version of some software will be suitable.
 > Perhaps a key bugfix only happened in a certain version, or version X broke compatibility with a file format you use.
 > In either of these example cases, it helps to be very specific about what software is loaded.
 {: .callout}
-
-You'll likely get something like the following, depending on where Julia is installed:
-
-~~~
-/cosma/local/julia/1.9.1/julia
-~~~
-{: .output}
 
 So, what just happened?
 
@@ -241,20 +300,25 @@ echo $PATH
 ~~~
 {: .language-bash}
 
+On COSMA (with the Julia module loaded) this looks like:
+
 ~~~
 /cosma/local/julia/1.9.1:/cosma/local/matlab/R2020b/bin:/cosma/local/gadgetviewer/1.1.4/bin:/cosma/local/hdfview/HDFView/3.1.4/bin:/cosma/local/arm/forge/22.0.2/bin:/cosma/local/Python/2.7.15/bin:/cosma/local/bin:/usr/lib64/qt-3.3/bin:/cosma/local/Modules/default/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
 ~~~
 {: .output}
 
 You'll notice a similarity to the output of the `which` command. In this case,
-there's only one difference: the different directory at the beginning.When we
+there's only one difference: the different directory at the beginning. When we
 ran the `module load` command, it added a directory to the beginning of our
-`$PATH`. Let's examine what's there (your particular path may differ):
+`$PATH`.
+Let's examine what's there (your particular path will differ depending on your site and the command):
 
 ~~~
 ls /cosma/local/julia/1.9.1
 ~~~
 {: .language-bash}
+
+So for Julia's directory location on COSMA, it looks like:
 
 ~~~
 base          contrib          etc              LICENSE.md  README.md    test           VERSION
@@ -264,7 +328,7 @@ cli           doc              julia.spdx.json  NEWS.md     sysimage.mk  usr-sta
 ~~~
 {: .output}
 
-Taking this to its conclusion, `module load` will add software to your `$PATH`,
+Taking this to its conclusion, `module load` will therefore add software to your `$PATH`,
 which is what is meant by *loading* software: we are essentially changing our command line environment
 so we are able to make use of the software.
 
@@ -317,34 +381,37 @@ The module command also restores these shell environment variables
 to their previous state when a module is unloaded.
 
 If we need such detail, we are able to see the changes that would be made to our environment using `module display`.
-For example:
+For example, on Tursa with `cmake`: 
 
 ~~~
-module display julia/1.9.1
+module display cmake
 ~~~
 {:. language-bash}
 
 ~~~
 -------------------------------------------------------------------
-/cosma/local/Modules/modulefiles/tools/julia/1.9.1:
+/home/y07/shared/tursa-modules/cmake/3.27.4:
 
-module-whatis   loads the julia environment
-prepend-path    PATH /cosma/local/julia/1.9.1
-prepend-path    MANPATH /cosma/local/julia/1.9.1/doc/man
+conflict        cmake
+prepend-path    PATH /home/y07/shared/utils/core/cmake/3.27.4/bin
+prepend-path    CPATH /home/y07/shared/utils/core/cmake/3.27.4/include
+prepend-path    LD_LIBRARY_PATH /home/y07/shared/utils/core/cmake/3.27.4/lib
+prepend-path    MANPATH /home/y07/shared/utils/core/cmake/3.27.4/man
 -------------------------------------------------------------------
 ~~~
 {: .output}
 
-So here, we can see that loading version 1.9.1 of Julia will add `/cosma/local/julia/1.9.1` to the start of our path,
-which we previously verified by examining the `$PATH` environment variable.
-We can also see that it adds `/cosma/local/julia/1.9.1/doc/man` to a variable called `$MANPATH`,
+So here, we can see that loading version 3.27.4 of `cmake` will add `/home/y07/shared/utils/core/cmake/3.27.4/bin` to the start of our path.
+We can also see that it adds `/home/y07/shared/utils/core/cmake/3.27.4/man` to a variable called `$MANPATH`,
 which is a specific path that contains locations of additional software manual pages we can access.
-Once Julia is loaded, we are thus able to then use `man julia` to access its manual page.
+Once `cmake` is loaded, we are thus able to then use `man cmake` to access its manual page,
+which is really useful in general for seeing information about commands, their parameters, and how to use them.
 
 > ## Loading Multiple Versions of the Same Module?
 > 
 > You may ask so what if we load multiple versions of the same module?
 > Depending on how your system is configured, this may be possible, e.g.
+> on COSMA:
 > 
 > ~~~
 > module load julia/1.9.1
@@ -367,12 +434,14 @@ Conversely, we may wish to unload modules we have previously loaded.
 This is useful if we no longer need to use a module, or require another version of the module.
 In general, it's always good practice to unload modules you aren't currently using.
 
-For example, assuming we already have Julia loaded, we can unload it using, e.g.:
+For example, assuming we already have Julia loaded, we can unload it using, e.g. on COSMA, with `julia`:
 
 ~~~
 module unload julia
 ~~~
 {: .language-bash}
+
+Depending on your site, use `module unload` with the module you loaded earlier.
 
 Note we don't have to specify the version number.
 Once unloaded, our environment no longer allows us to make use of the software until we load it again.
@@ -386,14 +455,22 @@ But we aware that this will also remove any modules that are loaded automaticall
 > but if we want to make use of modules in our jobs we also need to load them in our job scripts
 > so they are loaded on compute nodes when the job runs.
 > 
-> Create a job that is able to run `julia --version`. Remember, no software
+> Create a job that is able to show the version of the module command you loaded earlier, e.g.:
+> 
+> - CSD3: `bison --version`
+> - DiAL3: `ffmpeg -version` (note it's only using one hyphen!)
+> - Tursa: `cmake --version`
+> - COSMA: `julia --version`
+> 
+> Remember, no software
 > is loaded by default! Running a job is very similar to logging on to the system,
 > therefore you should not assume a module loaded on the login node is loaded on a
 > compute node.
 >
 > > ## Solution
 > >
-> > In `julia-module.sh` (again, replacing `yourAccount` and `aPartition`):
+> > In `version-module.sh` (again, replacing `yourAccount` and `aPartition`, but also replacing `cmake` with
+> > the command for your site if it isn't `cmake`):
 > >
 > > ~~~
 > > #!/bin/bash -l
@@ -403,14 +480,14 @@ But we aware that this will also remove any modules that are loaded automaticall
 > > #SBATCH --ntasks-per-node=1
 > > #SBATCH --time=00:00:30
 > > 
-> > module load julia
+> > module load cmake
 > >
-> > julia --version
+> > cmake --version
 > > ~~~
 > > {: .language-bash}
 > >
 > > ~~~
-> > sbatch julia-module.sh
+> > sbatch version-module.sh
 > > ~~~
 > > {: .language-bash}
 > {: .solution}
