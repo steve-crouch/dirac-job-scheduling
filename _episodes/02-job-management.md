@@ -11,7 +11,6 @@ questions:
 objectives:
 - "Specify a job's resource requirements in a Slurm batch script."
 - "Describe the main states a job passes through from start to completion."
-- "Describe the major ways a job may fail and how that's presented."
 - "Cancel multiple jobs using a single command."
 - "Describe how backfilling works and why it's useful."
 - "Obtain greater detail regarding the status of a completed job and its use of resources."
@@ -78,8 +77,8 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 
 > ## Being Specific
 >
-> Write and submit a job script - perhaps adapted from our previous one - that requests a total of 3 nodes with 2 CPUs
-> per node.
+> Write and submit a job script - perhaps adapted from our previous one - called `multi-node-job.sh` that requests a total of 2 nodes with 2 CPUs per node.
+> Remember to include any site-specific `#SBATCH` parameters.
 >
 > > ## Solution
 > >
@@ -87,8 +86,8 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 > > #!/bin/bash -l
 > > #SBATCH --account=yourAccount
 > > #SBATCH --partition=aPartition
-> > #SBATCH --nodes=3
-> > #SBATCH --ntasks=6
+> > #SBATCH --nodes=2
+> > #SBATCH --ntasks=4
 > > #SBATCH --time=00:00:30
 > >
 > > echo "This script is running on ... "
@@ -105,11 +104,11 @@ able to use multiple CPU cores. In which case, it essentially specifies the numb
 > >
 > > ~~~
 > >   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-> > 6485195 cosma7-pa mul-job. yourUse+  R       0:05      3 m[7400-7402]
+> > 6485195 cosma7-pa mul-job. yourUse+  R       0:05      2 m[7400-7412]
 > > ~~~
 > > {: .output}
 > > 
-> > Here we can see that the job is using a total of three nodes as we'd like - `m7400`, `m7401` and `m7402`.
+> > Here we can see that the job is using a total of two nodes as we'd like - `m7400` and `m7401`.
 >{: .solution}
 {: .challenge}
 
@@ -120,7 +119,7 @@ So using our above example with `--nodes=4`, to get our desired total 8 CPU core
 
 > ## Being Even More Specific
 >
-> Write and submit a job script that uses `--nodes` and `--ntasks-per-node` to request a total of 3 nodes with 2 CPUs
+> Write and submit a job script that uses `--nodes` and `--ntasks-per-node` to request a total of 2 nodes with 2 CPUs
 > per node.
 >
 > > ## Solution
@@ -129,7 +128,7 @@ So using our above example with `--nodes=4`, to get our desired total 8 CPU core
 > > #!/bin/bash -l
 > > #SBATCH --account=yourAccount
 > > #SBATCH --partition=aPartition
-> > #SBATCH --nodes=3
+> > #SBATCH --nodes=2
 > > #SBATCH --ntasks-per-node=2
 > > #SBATCH --time=00:00:30
 > >
@@ -138,7 +137,7 @@ So using our above example with `--nodes=4`, to get our desired total 8 CPU core
 > > ~~~
 > > {: .language-bash}
 > > 
-> > Once submitted, using `squeue` we should see the same results as before, again using a total of three nodes.
+> > Once submitted, using `squeue` we should see the same results as before, again using a total of two nodes.
 >{: .solution}
 {: .challenge}
 
@@ -216,7 +215,7 @@ for example, that the nodes required for the job are down or reserved for other 
 or that the job is queued behind a higher priority job that is making use of the requested resources.
 Once it's able to run, the nodes that have been allocated will be displayed in this column instead.
 
-However, there are a number of reasons why jobs may end due to a failure or other condition, including:
+However, in terms of job states, there are a number of reasons why jobs may end due to a failure or other condition, including:
 
 - `OOM` - *ouf of memory*: the job attempted to use more memory during execution than what was available
 - `S` - *suspended*: job has an allocation, but it has been suspended to allow for other jobs to use the resources
@@ -264,7 +263,7 @@ squeue -u yourUsername
 
 > ## Cancelling multiple jobs
 >
-> We can also cancel all of our jobs at once using the -u option. This will delete all jobs for a specific user (in this case, yourself). Note that you can only delete your own jobs.
+> We can also cancel all of our jobs at once using the `-u yourUsername` option. This will delete all jobs for a specific user (in this case, yourself). Note that you can only delete your own jobs.
 >
 > Try submitting multiple jobs and then cancelling them all.
 >
@@ -379,43 +378,45 @@ sbatch specific-job.sh
 
 ~~~
 ...
-Submitted batch job 6484453
+Submitted batch job 309281
 ~~~
 {: .output}
 
 We can then use this job ID to ask Slurm for more information about it:
 
 ~~~
-scontrol show jobid=6484453
+scontrol show jobid=309281
 ~~~
 {: .language-bash}
 
+On DiAL3, it would look something like this (although of course, on other sites it will differ in parts):
+
 ~~~
-JobId=6484457 JobName=specific-job
-   UserId=yourUsername(21859) GroupId=yourAccount(20133) MCS_label=N/A
-   Priority=100001 Nice=0 Account=yourAccount QOS=normal
-   JobState=RUNNING Reason=None Dependency=(null)
+JobId=309281 JobName=specific-job
+   UserId=dc-crou1(210462) GroupId=dirac(59019) MCS_label=N/A
+   Priority=7603 Nice=0 Account=ds007 QOS=normal
+   JobState=COMPLETED Reason=None Dependency=(null)
    Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
-   RunTime=00:00:08 TimeLimit=00:01:00 TimeMin=N/A
-   SubmitTime=2023-09-20T10:52:13 EligibleTime=2023-09-20T10:52:13
-   AccrueTime=2023-09-20T10:52:13
-   StartTime=2023-09-20T10:52:14 EndTime=2023-09-20T10:53:14 Deadline=N/A
-   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2023-09-20T10:52:14 Scheduler=Main
-   Partition=cosma7-pauper AllocNode:Sid=login7c:153560
+   RunTime=00:00:25 TimeLimit=00:01:00 TimeMin=N/A
+   SubmitTime=2024-08-01T11:57:18 EligibleTime=2024-08-01T11:57:18
+   AccrueTime=2024-08-01T11:57:18
+   StartTime=2024-08-01T11:57:19 EndTime=2024-08-01T11:57:44 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2024-08-01T11:57:19 Scheduler=Main
+   Partition=devel AllocNode:Sid=d3-login01:2159102
    ReqNodeList=(null) ExcNodeList=(null)
-   NodeList=m7401
-   BatchHost=m7401
-   NumNodes=1 NumCPUs=28 NumTasks=1 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
-   TRES=cpu=28,mem=510000M,node=1,billing=28
-   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   NodeList=dnode036
+   BatchHost=dnode036
+   NumNodes=1 NumCPUs=128 NumTasks=1 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=128,node=1,billing=128
+   Socks/Node=* NtasksPerN:B:S:C=1:0:*:* CoreSpec=*
    MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0
    Features=(null) DelayBoot=00:00:00
    OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
-   Command=/cosma/home/yourAccount/userHome/example-job.sh
-   WorkDir=/cosma/home/yourAccount/userHome
-   StdErr=/cosma/home/yourAccount/userHome/slurm-6484457.out
+   Command=/lustre/dirac3/home/dc-crou1/job-sched-testing/specific-job.sh
+   WorkDir=/lustre/dirac3/home/dc-crou1/job-sched-testing
+   StdErr=/lustre/dirac3/home/dc-crou1/job-sched-testing/slurm-309281.out
    StdIn=/dev/null
-   StdOut=/cosma/home/yourAccount/userHome/slurm-6484457.out
+   StdOut=/lustre/dirac3/home/dc-crou1/job-sched-testing/slurm-309281.out
    Power=
 ~~~
 {: .output}
@@ -426,7 +427,7 @@ In particular, we can see:
 - How long the job has run for (`RunTime`), and the job's maximum specified duration (`TimeLimit`)
 - The job's `SubmitTime`, as well as the job's `StartTime` for execution: this may be the actual start time, or the expected start time if set in the future. The expected `EndTime` is also specified, although if it isn't specified directly in the job script this isn't always exactly `StartTime` + specified duration; it's often rounded up, perhaps to the nearest minute.
 - The queue assigned for the job is the `cosma7-pauper` queue, and that the job is running on the `m7401` node
-- The resources assigned to the job are a single node (`NumNodes=1`) with 28 CPU cores, for a single task with 1 CPU core per task. Pretty much as we would expect given what we requested in our job script, although note that we may get more resources than what we asked for. For example in this instance, we can see that we actually obtained a node with 28 CPUs (although we won't use them)
+- The resources assigned to the job are a single node (`NumNodes=1`) with 128 CPU cores, for a single task with 1 CPU core per task. Note that in this case we got more resources in terms of CPUs than what we asked for. For example in this instance, we can see that we actually obtained a node with 128 CPUs (although we won't use them)
 - We didn't specify a working directory within which to execute the job, so the default `WorkDir` is our home directory
 - The error and output file locations, as specified by `StdErr` and `StdOut`
 
@@ -480,7 +481,7 @@ Wait until it reaches the running state designated by `R`:
 
 ~~~
   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-5791551 cosma7-pa hello-wo yourUser  R       0:00      1 (Priority)
+6803898 cosma7-pa hello-wo yourUser  R       0:00      1 (Priority)
 ~~~
 {: .output}
 
