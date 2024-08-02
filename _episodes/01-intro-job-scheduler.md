@@ -25,7 +25,7 @@ keypoints:
 ---
 
 
-## sdsdsdjob scheduling: A Recap
+## kkkkkkkkkkkkkkkkkkkkkkkkJob Scheduling: A Recap
 
 An HPC system might have thousands of nodes and thousands of users. How do we
 decide who gets what and when? How do we ensure that a task is run with the
